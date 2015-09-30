@@ -1,7 +1,7 @@
 defmodule PowerAssert.CaseTemplate do
-  defmacro __using__(opts) do
+  defmacro __using__(_) do
     quote do
-      use PowerAssert.ExUnitCaseTemplate, unquote(opts)
+      use PowerAssert.ExUnitCaseTemplate
       import PowerAssert.Assertion
     end
   end

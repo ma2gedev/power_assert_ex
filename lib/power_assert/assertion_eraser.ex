@@ -28,4 +28,13 @@ defmodule PowerAssert.AssertionEraser do
   def replace_ex_unit(ast) do
     ast
   end
+
+  def except_using({:import, _, [ExUnit.CaseTemplate]}) do
+    quote do
+      import ExUnit.CaseTemplate, only: :functions
+    end
+  end
+  def except_using(ast) do
+    ast
+  end
 end
