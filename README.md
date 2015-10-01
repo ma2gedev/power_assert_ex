@@ -28,6 +28,10 @@ And the result is like the following:
 
 Enjoy :muscle: !
 
+## Dependencies
+
+- ExUnit
+
 ## Installation
 
 ```
