@@ -870,24 +870,34 @@ defmodule PowerAssertAssertionTest do
   end
 
   test ":: expr not supported" do
-    expect = """
+    elixir_1_0 = """
     \"hoge\" == <<\"f\", Kernel.to_string(x) :: binary, \"a\">>
               |
               \"fuga\"
     """
-    assert_helper(expect, fn () ->
+    elixir_1_1 = """
+    \"hoge\" == \"f\#{x}a\"
+              |
+              \"fuga\"
+    """
+    assert_helper([elixir_1_0, elixir_1_1], fn () ->
       x = "ug"
       Assertion.assert "hoge" == "f#{x}a"
     end)
   end
 
   test "sigil expr not supported" do
-    expect = """
+    elixir_1_0 = """
     sigil_w(<<\"hoge fuga \", Kernel.to_string(x) :: binary>>, []) == y
                                                                     |
                                                                     [\"hoge\", \"fuga\"]
     """
-    assert_helper(expect, fn () ->
+    elixir_1_1 = """
+    ~w\"hoge fuga \#{x}\" == y
+                          |
+                          [\"hoge\", \"fuga\"]
+    """
+    assert_helper([elixir_1_0, elixir_1_1], fn () ->
       x = "nya"
       y = ["hoge", "fuga"]
       Assertion.assert ~w(hoge fuga #{x}) == y
@@ -1026,6 +1036,16 @@ defmodule PowerAssertAssertionTest do
     rescue
       error ->
         assert expect == error.message
+    end
+  end
+  def assert_helper(expects, func) when is_list(expects) do
+    [expect1, expect2] = Enum.map expects, &(String.strip(&1))
+    try do
+      func.()
+      assert false, "should be failed test #{expects}"
+    rescue
+      error ->
+        assert (expect1 == error.message) || (expect2 == error.message)
     end
   end
   def assert_helper(expect, func) do
