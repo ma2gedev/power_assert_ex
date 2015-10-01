@@ -1019,12 +1019,13 @@ defmodule PowerAssertAssertionTest do
   end
 
   def assert_helper(expect, func) when is_binary(expect) do
+    expect = String.strip(expect)
     try do
       func.()
       assert false, "should be failed test #{expect}"
     rescue
       error ->
-        assert expect == error.message <> "\n"
+        assert expect == error.message
     end
   end
   def assert_helper(expect, func) do
@@ -1033,7 +1034,7 @@ defmodule PowerAssertAssertionTest do
       assert false, "should be failed test #{expect}"
     rescue
       error ->
-        assert Regex.match?(expect, error.message <> "\n")
+        assert Regex.match?(expect, error.message)
     end
   end
 end
