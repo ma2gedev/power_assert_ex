@@ -78,7 +78,7 @@ defmodule YourAwesomeTest do
 end
 ```
 
-useful command
+useful command to replace `use ExUnit.CaseTemplate` and `use ExUnit.Case`
 
 ```bash
 $ git grep -l 'use ExUnit\.CaseTemplate' | xargs sed -i.bak -e 's/use ExUnit\.CaseTemplate/use PowerAssert.CaseTemplate/g'
@@ -94,7 +94,7 @@ assert(expression, message \\ nil)
 ## TODO
 
 - [x] `ExUnit.CaseTemplate` with `using function`
-- [] support `assert [one] = [two]`
+- [ ] support `assert [one] = [two]`
   - currently rely on `ExUnit.Assertions.assert/1`
 - and more we've not yet noticed
 
@@ -110,7 +110,7 @@ assert(expression, message \\ nil)
   - case expression
   - get_and_update_in/2, put_in/2, update_in/2, for/1
   - <<>> expression includes attributes `<<@x, "y">>; <<x :: binary, "y">>`
-  - __MODULE__.Foo
+  - `__MODULE__.Foo`
   - many macros maybe caught error...
 
 ## License
