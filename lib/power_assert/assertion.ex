@@ -46,29 +46,8 @@ defmodule PowerAssert.Assertion do
     end
   end
 
-  @doc """
-  execute code with inspected prints
-  useful for debug
-
-  iex> puts_expr(x |> Enum.at(y))
-  x |> Enum.at(y)
-  |         |  |
-  |         3  2
-  [1, 2, 3, 4]
-  3
-  """
-  defmacro puts_expr(ast) do
-    code = Macro.escape(ast)
-    injected_ast = inject_store_code(ast)
-
-    quote do
-      unquote(injected_ast)
-      IO.puts PowerAssert.Assertion.render_values(unquote(code), values)
-      result
-    end
-  end
-
-  defp inject_store_code(ast) do
+  @doc false
+  def inject_store_code(ast) do
     positions = detect_position(ast)
     {injected_ast, {_, _}} = PowerAssert.Ast.traverse(ast, {Enum.reverse(positions), 0}, &pre_catcher/2, &catcher/2)
     # IO.inspect injected_ast
