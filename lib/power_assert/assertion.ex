@@ -372,19 +372,30 @@ defmodule PowerAssert.Assertion do
     values = Enum.sort(values, fn([x_pos, _], [y_pos, _]) -> x_pos > y_pos end)
     [max_pos, _] = Enum.max_by(values, fn ([pos, _]) ->  pos end)
     first_line = String.duplicate(" ", max_pos + 1) |> replace_with_bar(values)
-    lines = make_lines([], Enum.count(values), values)
+    lines = make_lines([], Enum.count(values), values, -1)
     Enum.join([code_str, first_line] ++ lines, "\n")
   end
 
-  defp make_lines(lines, 0, _) do
+  defp make_lines(lines, 0, _, _latest_pos) do
     lines
   end
-  defp make_lines(lines, times, values) do
+  defp make_lines(lines, times, values, latest_pos) do
     [[pos, value]|t] = values
-    line = String.duplicate(" ", pos + 1)
-    line = replace_with_bar(line, values)
-    line = String.replace(line, ~r/\|$/, inspect(value))
-    make_lines(lines ++ [line], times - 1, t)
+    value = inspect(value)
+    value_len = String.length(value)
+    if latest_pos != -1 && latest_pos - (pos + value_len) > 0 do
+      [last_line|tail_lines] = lines |> Enum.reverse
+      {before_str, after_str} = String.split_at(last_line, pos)
+      {_removed_str, after_str} = String.split_at(after_str, value_len)
+      line = before_str <> value <> after_str
+      lines = [line|tail_lines] |> Enum.reverse
+    else
+      line = String.duplicate(" ", pos + 1)
+      line = replace_with_bar(line, values)
+      line = String.replace(line, ~r/\|$/, value)
+      lines = lines ++ [line]
+    end
+    make_lines(lines, times - 1, t, pos)
   end
 
   defp replace_with_bar(line, values) do

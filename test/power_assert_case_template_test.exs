@@ -22,8 +22,7 @@ defmodule MyTest do
         msg = """
         [1, 2, 3] |> Enum.take(1) |> Enum.empty?()
                           |               |
-                          |               false
-                          [1]
+                          [1]             false
         """
         ExUnit.Assertions.assert error.message <> "\n" == msg
     end
@@ -68,8 +67,7 @@ defmodule MyTestUsing do
         msg = """
         [1, 2, 3] |> Enum.take(1) |> Enum.empty?()
                           |               |
-                          |               false
-                          [1]
+                          [1]             false
         """
         ExUnit.Assertions.assert error.message <> "\n" == msg
     end

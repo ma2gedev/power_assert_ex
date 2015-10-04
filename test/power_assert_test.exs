@@ -2,7 +2,7 @@ defmodule PowerAssertTest do
   use PowerAssert
 
   #test "Enum.at should return the element at the given index" do
-  #  array = [1, 2, 3]; index = 2; two = 2
+  #  array = [1, 2, 3, 4, 5, 6]; index = 2; two = 2
   #  assert array |> Enum.at(index) == two
   #end
 
@@ -32,8 +32,7 @@ defmodule PowerAssertTest do
         msg = """
         [1, 2, 3] |> Enum.take(1) |> Enum.empty?()
                           |               |
-                          |               false
-                          [1]
+                          [1]             false
         """
 
         if error.message <> "\n" != msg do
@@ -54,8 +53,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     [1, 2, 3] |> Enum.take(1) |> Enum.empty?()
                       |               |
-                      |               false
-                      [1]
+                      [1]             false
     """
     assert_helper(expect, fn () ->
       Assertion.assert [1,2,3] |> Enum.take(1) |> Enum.empty?
@@ -101,9 +99,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     rem(x, y) != 1
     |   |  |
-    |   |  2
-    |   5
-    1
+    1   5  2
     """
     assert_helper(expect, fn () ->
       x = 5
@@ -114,9 +110,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     div(x, y) != 2
     |   |  |
-    |   |  2
-    |   5
-    2
+    2   5  2
     """
     assert_helper(expect, fn () ->
       x = 5
@@ -129,8 +123,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     hoge == fuga
     |       |
-    |       \"fuga\"
-    \"hoge\"
+    \"hoge\"  \"fuga\"
     """
     assert_helper(expect, fn () ->
       hoge = "hoge"
@@ -143,8 +136,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     hoge == piyo
     |       |
-    |       4
-    \"hoge\"
+    \"hoge\"  4
     """
     assert_helper(expect, fn () ->
       hoge = "hoge"
@@ -169,8 +161,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     hoge != piyo
     |       |
-    |       4
-    4
+    4       4
     """
     assert_helper(expect, fn () ->
       hoge = 4
@@ -197,9 +188,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     ary1 |> Enum.count() == ary2 |> Enum.count()
     |            |          |            |
-    |            |          |            1
-    |            |          [\"hoge\"]
-    |            2
+    |            2          [\"hoge\"]     1
     [\"hoge\", \"fuga\"]
     """
     assert_helper(expect, fn() ->
@@ -213,8 +202,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     5 < num && num < 13
         |      |
-        |      16
-        16
+        16     16
     """
     assert_helper(expect, fn () ->
       num = 16
@@ -238,8 +226,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     num < 5 || 13 < num
     |               |
-    |               10
-    10
+    10              10
     """
     assert_helper(expect, fn () ->
       num = 10
@@ -323,8 +310,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     [h | t] == [1, 2, 3, 4]
      |   |
-     |   [2, 3]
-     1
+     1   [2, 3]
     """
     assert_helper(expect, fn () ->
       h = 1
@@ -421,9 +407,7 @@ defmodule PowerAssertAssertionTest do
     |   ||    |       |   ||      1
     |   ||    |       |   |3
     |   ||    |       |   4
-    |   ||    |       #Function<.*>
-    |   ||    2
-    |   |1
+    |   |1    2       #Function<.*>
     |   3
     #Function<.*>
     """
@@ -440,11 +424,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     one * two * three == 7
     |   | |   | |
-    |   | |   | 3
-    |   | |   6
-    |   | 2
-    |   2
-    1
+    1   2 2   6 3
     """
     assert_helper(expect, fn () ->
       one = 1
@@ -458,9 +438,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     !Range.range?(range)
     |      |      |
-    |      |      1..3
-    |      true
-    false
+    false  true   1..3
     """
     assert_helper(expect, fn () ->
       range = 1..3
@@ -508,8 +486,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     x > y
     |   |
-    |   2
-    1
+    1   2
     """
     assert_helper(expect, fn () ->
       x = 1
@@ -520,8 +497,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     x < y
     |   |
-    |   1
-    2
+    2   1
     """
     assert_helper(expect, fn () ->
       x = 2
@@ -532,8 +508,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     x >= y
     |    |
-    |    2
-    1
+    1    2
     """
     assert_helper(expect, fn () ->
       x = 1
@@ -544,8 +519,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     x <= y
     |    |
-    |    1
-    2
+    2    1
     """
     assert_helper(expect, fn () ->
       x = 2
@@ -556,8 +530,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     x == y
     |    |
-    |    1
-    2
+    2    1
     """
     assert_helper(expect, fn () ->
       x = 2
@@ -568,8 +541,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     x != x
     |    |
-    |    2
-    2
+    2    2
     """
     assert_helper(expect, fn () ->
       x = 2
@@ -591,8 +563,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     x && y
     |    |
-    |    false
-    true
+    true false
     """
     assert_helper(expect, fn () ->
       x = true
@@ -601,10 +572,9 @@ defmodule PowerAssertAssertionTest do
     end)
 
     expect = """
-    x <> y == "hoge"
+    x <> y == \"hoge\"
     |    |
-    |    "ga"
-    "fu"
+    \"fu\" \"ga\"
     """
     assert_helper(expect, fn () ->
       x = "fu"
@@ -615,8 +585,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     x === y
     |     |
-    |     1.0
-    1
+    1     1.0
     """
     assert_helper(expect, fn () ->
       x = 1
@@ -627,8 +596,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     x !== y
     |     |
-    |     1
-    1
+    1     1
     """
     assert_helper(expect, fn () ->
       x = 1
@@ -639,8 +607,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     x and y
     |     |
-    |     false
-    true
+    true  false
     """
     assert_helper(expect, fn () ->
       x = true
@@ -678,12 +645,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     x * y == a + b
     | | |    | | |
-    | | |    | | 3
-    | | |    | 5
-    | | |    2
-    | | 3
-    | 6
-    2
+    2 6 3    2 5 3
     """
     assert_helper(expect, fn () ->
       x = 2
@@ -696,12 +658,8 @@ defmodule PowerAssertAssertionTest do
     expect = """
     x / y == a - b
     | | |    | | |
-    | | |    | | 2
-    | | |    | 4
-    | | |    6
-    | | 2
-    | 3.0
-    6
+    | | 2    6 4 2
+    6 3.0
     """
     assert_helper(expect, fn () ->
       x = 6
@@ -716,8 +674,7 @@ defmodule PowerAssertAssertionTest do
     | |  |    | |  |
     | |  |    | |  [1]
     | |  |    | [2, 3]
-    | |  |    [1, 2, 3]
-    | |  [4]
+    | |  [4]  [1, 2, 3]
     | [1, 2, 3, 4]
     [1, 2, 3]
     """
@@ -735,8 +692,7 @@ defmodule PowerAssertAssertionTest do
     -x == +y
     ||    ||
     ||    |-1
-    ||    -1
-    |-1
+    |-1   -1
     1
     """
     assert_helper(expect, fn () ->
@@ -788,8 +744,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     true == (x == y)
              |    |
-             |    false
-             true
+             true false
     """
     assert_helper(expect, fn () ->
       x = true; y = false
@@ -802,9 +757,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     @test_module_attr |> Enum.at(2) == x
     |                         |        |
-    |                         |        5
-    |                         3
-    [1, 2, 3]
+    [1, 2, 3]                 3        5
     """
     assert_helper(expect, fn () ->
       x = 5
@@ -834,8 +787,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     Enum.map(array, fn x -> x == 1 end) |> List.first()
          |   |                                  |
-         |   |                                  false
-         |   [2, 3]
+         |   [2, 3]                             false
          [false, false]
     """
     assert_helper(expect, fn () ->
@@ -847,8 +799,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     Enum.map(array, &(&1 == 1)) |> List.first()
          |   |                          |
-         |   |                          false
-         |   [2, 3]
+         |   [2, 3]                     false
          [false, false]
     """
     assert_helper(expect, fn () ->

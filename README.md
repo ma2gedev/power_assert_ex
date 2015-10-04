@@ -8,7 +8,7 @@ Example test is here:
 
 ```elixir
 test "Enum.at should return the element at the given index" do
-  array = [1, 2, 3]; index = 2; two = 2
+  array = [1, 2, 3, 4, 5, 6]; index = 2; two = 2
   assert array |> Enum.at(index) == two
 end
 ```
@@ -20,10 +20,8 @@ And the result is like the following:
 
      array |> Enum.at(index) == two
      |             |  |         |
-     |             |  |         2
-     |             |  2
-     |             3
-     [1, 2, 3]
+     |             3  2         2
+     [1, 2, 3, 4, 5, 6]
 ```
 
 Enjoy :muscle: !
