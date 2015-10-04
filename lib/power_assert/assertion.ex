@@ -23,8 +23,7 @@ defmodule PowerAssert.Assertion do
 
   defmacro assert(ast, msg \\ nil) do
     code = Macro.escape(ast)
-    positions = detect_position(ast)
-    injected_ast = inject_store_code(ast, positions)
+    injected_ast = inject_store_code(ast)
 
     # for avoid "this check/guard will always yield the same result"
     message_ast = if msg do
@@ -36,13 +35,9 @@ defmodule PowerAssert.Assertion do
     end
 
     quote do
-      {:ok, buffer} = Agent.start_link(fn -> [] end)
-      result = unquote(injected_ast)
-      values = Agent.get(buffer, &(&1))
-      Agent.stop(buffer)
+      unquote(injected_ast)
       unless result do
-        code = unquote(code)
-        message = PowerAssert.Assertion.render_values(code, values)
+        message = PowerAssert.Assertion.render_values(unquote(code), values)
         unquote(message_ast)
         raise ExUnit.AssertionError,
           message: message
@@ -51,6 +46,49 @@ defmodule PowerAssert.Assertion do
     end
   end
 
+  @doc """
+  execute code with inspected prints
+  useful for debug
+
+  iex> puts_expr(x |> Enum.at(y))
+  x |> Enum.at(y)
+  |         |  |
+  |         3  2
+  [1, 2, 3, 4]
+  3
+  """
+  defmacro puts_expr(ast) do
+    code = Macro.escape(ast)
+    injected_ast = inject_store_code(ast)
+
+    quote do
+      unquote(injected_ast)
+      IO.puts PowerAssert.Assertion.render_values(unquote(code), values)
+      result
+    end
+  end
+
+  defp inject_store_code(ast) do
+    positions = detect_position(ast)
+    {injected_ast, {_, _}} = PowerAssert.Ast.traverse(ast, {Enum.reverse(positions), 0}, &pre_catcher/2, &catcher/2)
+    # IO.inspect injected_ast
+    # IO.inspect Macro.to_string injected_ast
+    quote do
+      {:ok, buffer} = Agent.start_link(fn -> [] end)
+      result = unquote(injected_ast)
+      values = Agent.get(buffer, &(&1))
+      Agent.stop(buffer)
+    end
+  end
+
+  defp execute_injected_code(injected_ast) do
+    quote do
+      {:ok, buffer} = Agent.start_link(fn -> [] end)
+      result = unquote(injected_ast)
+      values = Agent.get(buffer, &(&1))
+      Agent.stop(buffer)
+    end
+  end
 
   ## detect positions
   defp detect_position(ast, default_index \\ 0) do
@@ -244,13 +282,6 @@ defmodule PowerAssert.Assertion do
 
 
   ## injection
-  defp inject_store_code(ast, positions) do
-    {injected_ast, {_, _}} = PowerAssert.Ast.traverse(ast, {Enum.reverse(positions), 0}, &pre_catcher/2, &catcher/2)
-    # IO.inspect injected_ast
-    # IO.inspect Macro.to_string injected_ast
-    injected_ast
-  end
-
   defp inject_first_argument({:__block__, block_meta, [first, second, third]} = _ast) do
     ast_for_inject = {:l_value, [], PowerAssert.Assertion}
     {:=, meta, [v, {func_call, func_meta, func_args}]} = first
