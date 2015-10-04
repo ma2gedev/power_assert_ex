@@ -60,15 +60,6 @@ defmodule PowerAssert.Assertion do
     end
   end
 
-  defp execute_injected_code(injected_ast) do
-    quote do
-      {:ok, buffer} = Agent.start_link(fn -> [] end)
-      result = unquote(injected_ast)
-      values = Agent.get(buffer, &(&1))
-      Agent.stop(buffer)
-    end
-  end
-
   ## detect positions
   defp detect_position(ast, default_index \\ 0) do
     {_ast, {_code, positions, _in_fn}} =
