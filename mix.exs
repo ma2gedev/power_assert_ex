@@ -7,7 +7,7 @@ defmodule PowerAssert.Mixfile do
      elixir: "~> 1.0",
      description: "Power Assert in Elixir",
      package: [
-       contributors: ["Takayuki Matsubara"],
+       maintainers: ["Takayuki Matsubara"],
        licenses: ["Apache 2.0"],
        links: %{"GitHub" => "https://github.com/ma2gedev/power_assert_ex"}
      ],
