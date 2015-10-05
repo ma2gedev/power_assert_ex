@@ -351,12 +351,13 @@ defmodule PowerAssertAssertionTest do
   end
 
   test "func expr" do
-    expect = ~r"""
+    expect_str = """
     func.()
     |    |
     |    false
-    #Function<.*>
-    """
+    #Function<
+    """ |> String.strip
+    expect = ~r/#{Regex.escape(expect_str)}/
     assert_helper(expect, fn () ->
       func = fn () -> false end
       Assertion.assert func.()
@@ -364,13 +365,14 @@ defmodule PowerAssertAssertionTest do
   end
 
   test "func with an one argument expr" do
-    expect = ~r"""
+    expect = """
     func.(value)
     |    ||
     |    |false
     |    false
-    #Function<.*>
-    """
+    #Function<
+    """ |> String.strip
+    expect = ~r/#{Regex.escape(expect)}/
     assert_helper(expect, fn () ->
       value = false
       func = fn (v) -> v end
@@ -379,14 +381,14 @@ defmodule PowerAssertAssertionTest do
   end
 
   test "func with arguments expr" do
-    expect = ~r"""
+    expect = """
     func.(value1, value2)
     |    ||       |
-    |    ||       "fuga"
-    |    |"hoge"
+    |    |"hoge"  "fuga"
     |    false
-    #Function<.*>
-    """
+    #Function<
+    """ |> String.strip
+    expect = ~r/#{Regex.escape(expect)}/
     assert_helper(expect, fn () ->
       value1 = "hoge"
       value2 = "fuga"
@@ -396,16 +398,19 @@ defmodule PowerAssertAssertionTest do
   end
 
   test "compare funcs expr" do
-    expect = ~r"""
+    expect1 = """
     sum.(one, two) == sum.(three, one)
     |   ||    |       |   ||      |
-    |   ||    |       |   ||      1
-    |   ||    |       |   |3
+    |   ||    |       |   |3      1
     |   ||    |       |   4
-    |   |1    2       #Function<.*>
+    |   |1    2       #Function<
+    """ |> String.strip
+    expect2 = """
+    >
     |   3
-    #Function<.*>
-    """
+    #Function<
+    """ |> String.strip
+    expect = ~r/#{Regex.escape(expect1)}.*#{Regex.escape(expect2)}/
     assert_helper(expect, fn () ->
       sum = fn (x, y) -> x + y end
       one = 1
