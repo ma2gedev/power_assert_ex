@@ -75,9 +75,9 @@ defmodule PowerAssertAssertionTest do
 
   test "tuple expr" do
     expect = """
-    {x, :hoge} == {\"x\", :hoge}
+    {x, :hoge} == {"x", :hoge}
      |
-     \"hoge\"
+     "hoge"
     """
     assert_helper(expect, fn () ->
       x = "hoge"
@@ -85,9 +85,9 @@ defmodule PowerAssertAssertionTest do
     end)
 
     expect = """
-    {x, :hoge, :fuga} == {\"x\", :hoge, :fuga}
+    {x, :hoge, :fuga} == {"x", :hoge, :fuga}
      |
-     \"hoge\"
+     "hoge"
     """
     assert_helper(expect, fn () ->
       x = "hoge"
@@ -123,7 +123,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     hoge == fuga
     |       |
-    \"hoge\"  \"fuga\"
+    "hoge"  "fuga"
     """
     assert_helper(expect, fn () ->
       hoge = "hoge"
@@ -136,7 +136,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     hoge == piyo
     |       |
-    \"hoge\"  4
+    "hoge"  4
     """
     assert_helper(expect, fn () ->
       hoge = "hoge"
@@ -174,8 +174,8 @@ defmodule PowerAssertAssertionTest do
     expect = """
     ary1 == ary2
     |       |
-    |       [\"hoge\"]
-    [\"hoge\", \"fuga\"]
+    |       ["hoge"]
+    ["hoge", "fuga"]
     """
     assert_helper(expect, fn () ->
       ary1 = ["hoge", "fuga"]
@@ -188,8 +188,8 @@ defmodule PowerAssertAssertionTest do
     expect = """
     ary1 |> Enum.count() == ary2 |> Enum.count()
     |            |          |            |
-    |            2          [\"hoge\"]     1
-    [\"hoge\", \"fuga\"]
+    |            2          ["hoge"]     1
+    ["hoge", "fuga"]
     """
     assert_helper(expect, fn() ->
       ary1 = ["hoge", "fuga"]
@@ -249,7 +249,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     map == %{value: "hoge"}
     |
-    %{value: \"fuga\"}
+    %{value: "fuga"}
     """
     assert_helper(expect, fn () ->
       map = %{value: "fuga"}
@@ -286,7 +286,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     keywords == [value: "hoge"]
     |
-    [value: \"fuga\"]
+    [value: "fuga"]
     """
     assert_helper(expect, fn () ->
       keywords = [value: "fuga"]
@@ -298,8 +298,8 @@ defmodule PowerAssertAssertionTest do
     expect = """
     %{map | hoge: x} == %{hoge: "hoge", fuga: "fuga"}
       |           |
-      |           \"x\"
-      %{fuga: \"fuga\", hoge: \"hoge\"}
+      |           "x"
+      %{fuga: "fuga", hoge: "hoge"}
     """
     assert_helper(expect, fn () ->
       x = "x"
@@ -572,9 +572,9 @@ defmodule PowerAssertAssertionTest do
     end)
 
     expect = """
-    x <> y == \"hoge\"
+    x <> y == "hoge"
     |    |
-    \"fu\" \"ga\"
+    "fu" "ga"
     """
     assert_helper(expect, fn () ->
       x = "fu"
@@ -732,7 +732,7 @@ defmodule PowerAssertAssertionTest do
     expect = """
     x == %TestStruct{value: "fuga"}
     |
-    %PowerAssertAssertionTest.TestStruct{value: \"ho\"}
+    %PowerAssertAssertionTest.TestStruct{value: "ho"}
     """
     assert_helper(expect, fn () ->
       x = %TestStruct{value: "ho"}
@@ -822,14 +822,14 @@ defmodule PowerAssertAssertionTest do
 
   test ":: expr not supported" do
     elixir_1_0 = """
-    \"hoge\" == <<\"f\", Kernel.to_string(x) :: binary, \"a\">>
+    "hoge" == <<"f", Kernel.to_string(x) :: binary, "a">>
               |
-              \"fuga\"
+              "fuga"
     """
     elixir_1_1 = """
-    \"hoge\" == \"f\#{x}a\"
+    "hoge" == "f\#{x}a"
               |
-              \"fuga\"
+              "fuga"
     """
     assert_helper([elixir_1_0, elixir_1_1], fn () ->
       x = "ug"
@@ -839,14 +839,14 @@ defmodule PowerAssertAssertionTest do
 
   test "sigil expr not supported" do
     elixir_1_0 = """
-    sigil_w(<<\"hoge fuga \", Kernel.to_string(x) :: binary>>, []) == y
+    sigil_w(<<"hoge fuga ", Kernel.to_string(x) :: binary>>, []) == y
                                                                     |
-                                                                    [\"hoge\", \"fuga\"]
+                                                                    ["hoge", "fuga"]
     """
     elixir_1_1 = """
-    ~w\"hoge fuga \#{x}\" == y
+    ~w"hoge fuga \#{x}" == y
                           |
-                          [\"hoge\", \"fuga\"]
+                          ["hoge", "fuga"]
     """
     assert_helper([elixir_1_0, elixir_1_1], fn () ->
       x = "nya"
@@ -883,9 +883,9 @@ defmodule PowerAssertAssertionTest do
 
   test "get_and_update_in/2, put_in/2 and update_in/2 expr are not supported" do
     expect = """
-    put_in(users[\"john\"][:age], 28) == %{\"john\" => %{age: 27}}
+    put_in(users["john"][:age], 28) == %{"john" => %{age: 27}}
     |
-    %{\"john\" => %{age: 28}}
+    %{"john" => %{age: 28}}
     """
     assert_helper(expect, fn () ->
       users = %{"john" => %{age: 27}}
@@ -893,9 +893,9 @@ defmodule PowerAssertAssertionTest do
     end)
 
     expect = """
-    update_in(users[\"john\"][:age], &(&1 + 1)) == %{\"john\" => %{age: 27}}
+    update_in(users["john"][:age], &(&1 + 1)) == %{"john" => %{age: 27}}
     |
-    %{\"john\" => %{age: 28}}
+    %{"john" => %{age: 28}}
     """
     assert_helper(expect, fn () ->
       users = %{"john" => %{age: 27}}
@@ -903,9 +903,9 @@ defmodule PowerAssertAssertionTest do
     end)
 
     expect = """
-    get_and_update_in(users[\"john\"].age(), &{&1, &1 + 1}) == {27, %{\"john\" => %{age: 27}}}
+    get_and_update_in(users["john"].age(), &{&1, &1 + 1}) == {27, %{"john" => %{age: 27}}}
     |
-    {27, %{\"john\" => %{age: 28}}}
+    {27, %{"john" => %{age: 28}}}
     """
     assert_helper(expect, fn () ->
       users = %{"john" => %{age: 27}}
@@ -930,9 +930,9 @@ defmodule PowerAssertAssertionTest do
   @hello "hello"
   test ":<<>> expr includes module attribute not supported" do
     expect = """
-    <<@hello, \" \", "\world\">> == \"hello world!\"
+    <<@hello, " ", "world">> == "hello world!"
     |
-    \"hello world\"
+    "hello world"
     """
     assert_helper(expect, fn () ->
       Assertion.assert <<@hello, " ", "world">> == "hello world!"
