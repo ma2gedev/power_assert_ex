@@ -22,6 +22,7 @@ defmodule PowerAssertTest do
   test "raise" do
     try do
       assert [1,2,3] |> Enum.take(1) |> Enum.empty?
+      ExUnit.Assertions.assert false, "should not reach"
     rescue
       error ->
         msg = """
@@ -32,7 +33,7 @@ defmodule PowerAssertTest do
 
         if error.message <> "\n" != msg do
           value = false
-          assert value
+          ExUnit.Assertions.assert value
         end
     end
   end
