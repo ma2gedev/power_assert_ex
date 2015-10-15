@@ -83,6 +83,26 @@ $ git grep -l 'use ExUnit\.CaseTemplate' | xargs sed -i.bak -e 's/use ExUnit\.Ca
 $ git grep -l 'use ExUnit\.Case' | xargs sed -i.bak -e 's/use ExUnit\.Case/use PowerAssert/g'
 ```
 
+## How to use other framework depending on ExUnit such as ExSpec
+
+For instance ExSpec calls `use ExUnit` inside module, `assert` macro is already imported and conflicted with our `assert` macro.
+So avoiding conflicted problem we provide the `:use_ex_unit` option:
+If `:use_ex_unit` is set as `true`, `use PowerAssert` provides `power_assert` macro instead of `assert`. Also does not `use ExUnit.Case` inside module.
+NOTE: This option is available experimentally.
+
+```
+defmodule ExSpecBasedTest do
+  use ExSpec
+  use PowerAssert, use_ex_unit: true    # use PowerAssert with :use_ex_unit option
+
+  describe "describe" do
+    it "it" do
+      power_assert something == "hoge"  # `power_assert` macro is enabled
+    end
+  end
+end
+```
+
 ## API
 
 ```
