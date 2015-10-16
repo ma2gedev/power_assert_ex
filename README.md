@@ -112,7 +112,7 @@ assert(expression, message \\ nil)
 ## TODO
 
 - [x] `ExUnit.CaseTemplate` with `using function`
-- [ ] support `assert [one] = [two]`
+- [x] support `assert [one] = [two]`
   - currently rely on `ExUnit.Assertions.assert/1`
 - and more we've not yet noticed
 

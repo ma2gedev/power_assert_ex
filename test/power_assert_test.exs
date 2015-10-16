@@ -56,6 +56,57 @@ defmodule PowerAssertAssertionTest do
     end)
   end
 
+  test "assignment success" do
+    Assertion.assert x = 1
+    assert x == 1
+    Assertion.assert %{ hoge: x } = %{ hoge: "hoge" }
+    assert x == "hoge"
+    Assertion.assert x = %{ hoge: "hoge" }
+    assert x == %{ hoge: "hoge" }
+  end
+
+  test "assignment failed" do
+    expect = """
+    [false] = [x]
+               |
+               "hoge"
+    """
+    assert_helper(expect, fn () ->
+      x = "hoge"
+      Assertion.assert [false] = [x]
+    end)
+
+    expect = """
+    %{fuga: _} = x
+                 |
+                 %{hoge: "fuga"}
+    """
+    assert_helper(expect, fn () ->
+      x = %{ hoge: "fuga" }
+      Assertion.assert %{ fuga: _ } = x
+    end)
+
+    expect = """
+    "hell" = ["hello", "hoge"] |> Enum.at(0)
+                                       |
+                                       "hello"
+    """
+    assert_helper(expect, fn () ->
+      Assertion.assert "hell" = ["hello", "hoge"] |> Enum.at(0)
+    end)
+
+    expect = """
+    Expected truthy, got nil
+
+    nil = [nil, "hoge"] |> Enum.at(0)
+                                |
+                                nil
+    """
+    assert_helper(expect, fn () ->
+      Assertion.assert nil = [nil, "hoge"] |> Enum.at(0)
+    end)
+  end
+
   test "with message" do
     expect = """
     failed with message

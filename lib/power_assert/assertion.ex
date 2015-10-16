@@ -3,6 +3,8 @@ defmodule PowerAssert.Assertion do
   This module handles Power Assert main function
   """
 
+  @assign_len 3 # length of " = "
+
   @doc """
   assert with descriptive messages
 
@@ -13,11 +15,41 @@ defmodule PowerAssert.Assertion do
       |             3
       [1, 2, 3]
   """
-  # TODO: should support
-  defmacro assert({:=, _, [_left, _right]} = ast) do
+  defmacro assert({:=, _, [left, right]} = ast) do
+    # Almost the same code as ExUnit but rhs is displayed in detail
+    code = Macro.escape(ast)
+    rhs_index = (Macro.to_string(left) |> String.length) + @assign_len
+    injected_rhs_ast = inject_store_code(right, rhs_index)
+
+    {:if, meta, args} =
+      quote do
+        if right do
+          right
+        else
+          message = PowerAssert.Assertion.render_values(expr, values)
+          raise ExUnit.AssertionError,
+            message: "Expected truthy, got #{inspect right}\n\n" <> message
+        end
+      end
+    return = {:if, [line: -1] ++ meta, args}
+
+    {:case, meta, args} =
+      quote do
+        case right do
+          unquote(left) ->
+            unquote(return)
+          _ ->
+            message = PowerAssert.Assertion.render_values(expr, values)
+            raise ExUnit.AssertionError,
+              message: message
+        end
+      end
+
     quote do
-      require ExUnit.Assertions
-      ExUnit.Assertions.assert(unquote(ast))
+      unquote(injected_rhs_ast)
+      right = result
+      expr  = unquote(code)
+      unquote({:case, [{:export_head, true}|meta], args})
     end
   end 
 
@@ -47,8 +79,8 @@ defmodule PowerAssert.Assertion do
   end
 
   @doc false
-  def inject_store_code(ast) do
-    positions = detect_position(ast)
+  def inject_store_code(ast, default_index \\ 0) do
+    positions = detect_position(ast, default_index)
     {injected_ast, {_, _}} = PowerAssert.Ast.traverse(ast, {Enum.reverse(positions), 0}, &pre_catcher/2, &catcher/2)
     # IO.inspect injected_ast
     # IO.inspect Macro.to_string injected_ast
@@ -61,7 +93,7 @@ defmodule PowerAssert.Assertion do
   end
 
   ## detect positions
-  defp detect_position(ast, default_index \\ 0) do
+  defp detect_position(ast, default_index) do
     {_ast, {_code, positions, _in_fn}} =
       PowerAssert.Ast.traverse(ast, {Macro.to_string(ast), [], 0}, &pre_collect_position/2, &collect_position/2)
     if default_index != 0 do
