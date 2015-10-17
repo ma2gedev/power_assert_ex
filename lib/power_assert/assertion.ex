@@ -15,11 +15,14 @@ defmodule PowerAssert.Assertion do
       |             3
       [1, 2, 3]
   """
-  defmacro assert({:=, _, [left, right]} = ast) do
+  defmacro assert(ast, msg \\ nil)
+
+  defmacro assert({:=, _, [left, right]} = ast, msg) do
     # Almost the same code as ExUnit but rhs is displayed in detail
     code = Macro.escape(ast)
     rhs_index = (Macro.to_string(left) |> String.length) + @assign_len
     injected_rhs_ast = inject_store_code(right, rhs_index)
+    message_ast = message_ast(msg)
 
     {:if, meta, args} =
       quote do
@@ -27,6 +30,7 @@ defmodule PowerAssert.Assertion do
           right
         else
           message = PowerAssert.Assertion.render_values(expr, values)
+          unquote(message_ast)
           raise ExUnit.AssertionError,
             message: "Expected truthy, got #{inspect right}\n\n" <> message
         end
@@ -40,6 +44,7 @@ defmodule PowerAssert.Assertion do
             unquote(return)
           _ ->
             message = PowerAssert.Assertion.render_values(expr, values)
+            unquote(message_ast)
             raise ExUnit.AssertionError,
               message: message
         end
@@ -53,18 +58,11 @@ defmodule PowerAssert.Assertion do
     end
   end 
 
-  defmacro assert(ast, msg \\ nil) do
+  defmacro assert(ast, msg) do
     code = Macro.escape(ast)
     injected_ast = inject_store_code(ast)
 
-    # for avoid "this check/guard will always yield the same result"
-    message_ast = if msg do
-      quote do
-        message = "#{unquote(msg)}\n\n" <> message
-      end
-    else
-      nil
-    end
+    message_ast = message_ast(msg)
 
     quote do
       unquote(injected_ast)
@@ -77,6 +75,14 @@ defmodule PowerAssert.Assertion do
       result
     end
   end
+
+  # for avoid "this check/guard will always yield the same result"
+  defp message_ast(msg) when is_binary(msg) do
+    quote do
+      message = "#{unquote(msg)}\n\n" <> message
+    end
+  end
+  defp message_ast(_msg), do: nil
 
   @doc false
   def inject_store_code(ast, default_index \\ 0) do
