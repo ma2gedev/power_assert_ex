@@ -4,6 +4,7 @@ defmodule PowerAssert.Assertion do
   """
 
   @assign_len 3 # length of " = "
+  @equal_len  4 # length of " == "
 
   @doc """
   assert with descriptive messages
@@ -20,8 +21,10 @@ defmodule PowerAssert.Assertion do
   defmacro assert({:=, _, [left, right]} = ast, msg) do
     # Almost the same code as ExUnit but rhs is displayed in detail
     code = Macro.escape(ast)
+    [_|t] = String.split(Macro.to_string(ast), " = ")
+    rhs_expr = Enum.join(t, " = ")
     rhs_index = (Macro.to_string(left) |> String.length) + @assign_len
-    injected_rhs_ast = inject_store_code(right, rhs_index)
+    injected_rhs_ast = inject_store_code(right, rhs_expr, rhs_index)
     message_ast = message_ast(msg)
 
     {:if, meta, args} =
@@ -58,9 +61,34 @@ defmodule PowerAssert.Assertion do
     end
   end 
 
+  defmacro assert({:==, _, [left, right]} = ast, msg) do
+    code = Macro.escape(ast)
+    [lhs_expr|t] = String.split(Macro.to_string(ast), " == ")
+    rhs_expr = Enum.join(t, " == ")
+    injected_lhs_ast = inject_store_code(left, lhs_expr)
+    rhs_index = (Macro.to_string(left) |> String.length) + @equal_len
+    injected_rhs_ast = inject_store_code(right, rhs_expr, rhs_index)
+    message_ast = message_ast(msg)
+
+    quote do
+      unquote(injected_lhs_ast)
+      left = result
+      left_values = values
+      unquote(injected_rhs_ast)
+      # wrap result for avoid warning: this check/guard will always yield the same result
+      unless left == fn(x) -> x end.(result) do
+        message = PowerAssert.Assertion.render_values(unquote(code), left_values ++ values, left, result)
+        unquote(message_ast)
+        raise ExUnit.AssertionError,
+          message: message
+      end
+      result
+    end
+  end
+
   defmacro assert(ast, msg) do
     code = Macro.escape(ast)
-    injected_ast = inject_store_code(ast)
+    injected_ast = inject_store_code(ast, Macro.to_string(ast))
 
     message_ast = message_ast(msg)
 
@@ -85,8 +113,8 @@ defmodule PowerAssert.Assertion do
   defp message_ast(_msg), do: nil
 
   @doc false
-  def inject_store_code(ast, default_index \\ 0) do
-    positions = detect_position(ast, default_index)
+  def inject_store_code(ast, expr, default_index \\ 0) do
+    positions = detect_position(ast, expr, default_index)
     {injected_ast, {_, _}} = PowerAssert.Ast.traverse(ast, {Enum.reverse(positions), 0}, &pre_catcher/2, &catcher/2)
     # IO.inspect injected_ast
     # IO.inspect Macro.to_string injected_ast
@@ -99,9 +127,9 @@ defmodule PowerAssert.Assertion do
   end
 
   ## detect positions
-  defp detect_position(ast, default_index) do
+  defp detect_position(ast, expr, default_index) do
     {_ast, {_code, positions, _in_fn}} =
-      PowerAssert.Ast.traverse(ast, {Macro.to_string(ast), [], 0}, &pre_collect_position/2, &collect_position/2)
+      PowerAssert.Ast.traverse(ast, {expr, [], 0}, &pre_collect_position/2, &collect_position/2)
     if default_index != 0 do
       positions = Enum.map(positions, fn([pos, code]) -> [default_index + pos, code] end)
     end
@@ -403,16 +431,17 @@ defmodule PowerAssert.Assertion do
 
 
   ## render
-  def render_values(code, []) do
-    Macro.to_string(code)
+  def render_values(code, values, left \\ nil, right \\ nil)
+  def render_values(code, [], left, right) do
+    Macro.to_string(code) <> extra_information(left, right)
   end
-  def render_values(code, values) do
+  def render_values(code, values, left, right) do
     code_str = Macro.to_string(code)
     values = Enum.sort(values, fn([x_pos, _], [y_pos, _]) -> x_pos > y_pos end)
     [max_pos, _] = Enum.max_by(values, fn ([pos, _]) ->  pos end)
     first_line = String.duplicate(" ", max_pos + 1) |> replace_with_bar(values)
     lines = make_lines([], Enum.count(values), values, -1)
-    Enum.join([code_str, first_line] ++ lines, "\n")
+    Enum.join([code_str, first_line] ++ lines, "\n") <> extra_information(left, right)
   end
 
   defp make_lines(lines, 0, _, _latest_pos) do
@@ -443,4 +472,11 @@ defmodule PowerAssert.Assertion do
       String.replace(front, ~r/ $/, "|") <> back
     end)
   end
+
+  defp extra_information(left, right) when is_list(left) and is_list(right) do
+    ["\n\nonly in lhs: " <> ((left -- right) |> inspect),
+     "only in rhs: " <> ((right -- left) |> inspect)]
+    |> Enum.join("\n")
+  end
+  defp extra_information(_left, _right), do: ""
 end

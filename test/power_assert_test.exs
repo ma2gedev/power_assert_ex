@@ -223,11 +223,24 @@ defmodule PowerAssertAssertionTest do
     |       |
     |       ["hoge"]
     ["hoge", "fuga"]
+    
+    only in lhs: ["fuga"]
+    only in rhs: []
     """
     assert_helper(expect, fn () ->
       ary1 = ["hoge", "fuga"]
       ary2 = ["hoge"]
       Assertion.assert ary1 == ary2
+    end)
+
+    expect = """
+    [1, 2, 3] == [2, 3, 4]
+
+    only in lhs: [1]
+    only in rhs: [4]
+    """
+    assert_helper(expect, fn () ->
+      Assertion.assert [1, 2, 3] == [2, 3, 4]
     end)
   end
 
@@ -334,6 +347,9 @@ defmodule PowerAssertAssertionTest do
     keywords == [value: "hoge"]
     |
     [value: "fuga"]
+
+    only in lhs: [value: "fuga"]
+    only in rhs: [value: "hoge"]
     """
     assert_helper(expect, fn () ->
       keywords = [value: "fuga"]
@@ -358,6 +374,9 @@ defmodule PowerAssertAssertionTest do
     [h | t] == [1, 2, 3, 4]
      |   |
      1   [2, 3]
+    
+    only in lhs: []
+    only in rhs: [4]
     """
     assert_helper(expect, fn () ->
       h = 1
@@ -729,6 +748,9 @@ defmodule PowerAssertAssertionTest do
     | |  [4]  [1, 2, 3]
     | [1, 2, 3, 4]
     [1, 2, 3]
+
+    only in lhs: [1, 4]
+    only in rhs: []
     """
     assert_helper(expect, fn () ->
       x = [1, 2, 3]
@@ -894,11 +916,17 @@ defmodule PowerAssertAssertionTest do
     sigil_w(<<"hoge fuga ", Kernel.to_string(x) :: binary>>, []) == y
                                                                     |
                                                                     ["hoge", "fuga"]
+    
+    only in lhs: ["nya"]
+    only in rhs: []
     """
     elixir_1_1 = """
     ~w"hoge fuga \#{x}" == y
                           |
                           ["hoge", "fuga"]
+    
+    only in lhs: ["nya"]
+    only in rhs: []
     """
     assert_helper([elixir_1_0, elixir_1_1], fn () ->
       x = "nya"
@@ -972,6 +1000,9 @@ defmodule PowerAssertAssertionTest do
     end == [2, 4, 6]
     |
     [2, 4, 8]
+    
+    only in lhs: '\\b'
+    only in rhs: [6]
     """
     assert_helper(expect, fn () ->
       enum = [1,2,4]
