@@ -310,6 +310,9 @@ defmodule PowerAssertAssertionTest do
     map == %{value: "hoge"}
     |
     %{value: "fuga"}
+
+    difference:
+    key :value => {"fuga", "hoge"}
     """
     assert_helper(expect, fn () ->
       map = %{value: "fuga"}
@@ -363,6 +366,9 @@ defmodule PowerAssertAssertionTest do
       |           |
       |           "x"
       %{fuga: "fuga", hoge: "hoge"}
+
+    difference:
+    key :hoge => {"x", "hoge"}
     """
     assert_helper(expect, fn () ->
       x = "x"
@@ -807,6 +813,9 @@ defmodule PowerAssertAssertionTest do
     x == %TestStruct{value: "fuga"}
     |
     %PowerAssertAssertionTest.TestStruct{value: "ho"}
+
+    difference:
+    key :value => {"ho", "fuga"}
     """
     assert_helper(expect, fn () ->
       x = %TestStruct{value: "ho"}
@@ -966,6 +975,9 @@ defmodule PowerAssertAssertionTest do
     put_in(users["john"][:age], 28) == %{"john" => %{age: 27}}
     |
     %{"john" => %{age: 28}}
+
+    difference:
+    key "john" => {%{age: 28}, %{age: 27}}
     """
     assert_helper(expect, fn () ->
       users = %{"john" => %{age: 27}}
@@ -976,6 +988,9 @@ defmodule PowerAssertAssertionTest do
     update_in(users["john"][:age], &(&1 + 1)) == %{"john" => %{age: 27}}
     |
     %{"john" => %{age: 28}}
+
+    difference:
+    key "john" => {%{age: 28}, %{age: 27}}
     """
     assert_helper(expect, fn () ->
       users = %{"john" => %{age: 27}}
@@ -1059,6 +1074,23 @@ defmodule PowerAssertAssertionTest do
     assert_helper(expect, fn () ->
       module = __ENV__.module
       Assertion.assert module != __MODULE__
+    end)
+  end
+
+  test "big map" do
+    expect = """
+    big_map == %{:hoge => "value", "value" => "hoge", ["fuga"] => [], %{hoge: :hoge} => %{}, :big => "big", :middle => "middle", :small => "small"}
+    |
+    %{:big => "big", :hoge => "value", :moga => "moga", :small => "small", %{hoge: :hoge} => %{}, ["fuga"] => [], "value" => "hoe"}
+
+    only in lhs: %{moga: "moga"}
+    only in rhs: %{middle: "middle"}
+    difference:
+    key "value" => {"hoe", "hoge"}
+    """
+    assert_helper(expect, fn () ->
+      big_map = %{:hoge => "value", "value" => "hoe", ["fuga"] => [], %{hoge: :hoge} => %{}, :big => "big", :small => "small", moga: "moga"}
+      Assertion.assert big_map == %{:hoge => "value", "value" => "hoge", ["fuga"] => [], %{hoge: :hoge} => %{}, :big => "big", :middle => "middle", :small => "small"}
     end)
   end
 

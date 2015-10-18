@@ -478,5 +478,36 @@ defmodule PowerAssert.Assertion do
      "only in rhs: " <> ((right -- left) |> inspect)]
     |> Enum.join("\n")
   end
+  defp extra_information(left, right) when is_map(left) and is_map(right) do
+    if Map.has_key? left, :__struct__ do
+      left = Map.from_struct(left)
+      right = Map.from_struct(right)
+    end
+    in_left = Map.split(left, Map.keys(right)) |> elem(1)
+    in_right = Map.split(right, Map.keys(left)) |> elem(1)
+    str = "\n"
+    unless Map.size(in_left) == 0 do
+      str = str <> "\nonly in lhs: " <> inspect(in_left)
+    end
+    unless Map.size(in_right) == 0 do
+      str = str <> "\nonly in rhs: " <> inspect(in_right)
+    end
+    diff = collect_map_diff(left, right)
+    unless Enum.empty?(diff) do
+      str = str <> "\ndifference:\n" <> Enum.join(diff, "\n")
+    end
+    str
+  end
   defp extra_information(_left, _right), do: ""
+
+  defp collect_map_diff(map1, map2) do
+    Enum.reduce(map2, [], fn({k, v}, acc) ->
+      case Map.fetch(map1, k) do
+        {:ok, ^v} -> acc
+        {:ok, map1_value} ->
+          acc ++ ["key #{inspect k} => {#{inspect map1_value}, #{inspect v}}"]
+        _ -> acc
+      end
+    end)
+  end
 end
