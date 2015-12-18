@@ -498,7 +498,17 @@ defmodule PowerAssert.Assertion do
     end
     str
   end
-  defp extra_information(_left, _right), do: ""
+  defp extra_information(left, right) do
+    if String.valid?(left) && String.valid?(right) do
+      extra_information_for_string(left, right)
+    else
+      ""
+    end
+  end
+
+  defp extra_information_for_string(left, right) do
+    "\n\ndifference:" <> "\n" <> left <> "\n" <> right
+  end
 
   defp collect_map_diff(map1, map2) do
     Enum.reduce(map2, [], fn({k, v}, acc) ->

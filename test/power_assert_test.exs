@@ -171,6 +171,10 @@ defmodule PowerAssertAssertionTest do
     hoge == fuga
     |       |
     "hoge"  "fuga"
+
+    difference:
+    hoge
+    fuga
     """
     assert_helper(expect, fn () ->
       hoge = "hoge"
@@ -652,6 +656,10 @@ defmodule PowerAssertAssertionTest do
     x <> y == "hoge"
     |    |
     "fu" "ga"
+
+    difference:
+    fuga
+    hoge
     """
     assert_helper(expect, fn () ->
       x = "fu"
@@ -908,11 +916,19 @@ defmodule PowerAssertAssertionTest do
     "hoge" == <<"f", Kernel.to_string(x) :: binary, "a">>
               |
               "fuga"
+
+    difference:
+    hoge
+    fuga
     """
     elixir_1_1 = """
     "hoge" == "f\#{x}a"
               |
               "fuga"
+
+    difference:
+    hoge
+    fuga
     """
     assert_helper([elixir_1_0, elixir_1_1], fn () ->
       x = "ug"
@@ -1031,6 +1047,10 @@ defmodule PowerAssertAssertionTest do
     <<@hello, " ", "world">> == "hello world!"
     |
     "hello world"
+
+    difference:
+    hello world
+    hello world!
     """
     assert_helper(expect, fn () ->
       Assertion.assert <<@hello, " ", "world">> == "hello world!"
