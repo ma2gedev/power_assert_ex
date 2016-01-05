@@ -27,37 +27,37 @@ defmodule PowerAssert.Assertion do
     injected_rhs_ast = inject_store_code(right, rhs_expr, rhs_index)
     message_ast = message_ast(msg)
 
-    {:if, meta, args} =
-      quote do
-        if right do
-          right
-        else
-          message = PowerAssert.Assertion.render_values(expr, values)
-          unquote(message_ast)
-          raise ExUnit.AssertionError,
-            message: "Expected truthy, got #{inspect right}\n\n" <> message
-        end
-      end
-    return = {:if, [line: -1] ++ meta, args}
+    left = Macro.expand(left, __CALLER__)
+    vars = collect_vars_from_pattern(left)
 
-    {:case, meta, args} =
-      quote do
+    return =
+        no_warning(quote do
+          if right do
+            right
+          else
+            message = PowerAssert.Assertion.render_values(expr, values)
+            unquote(message_ast)
+            raise ExUnit.AssertionError,
+              message: "Expected truthy, got #{inspect right}\n\n" <> message
+          end
+        end)
+
+    quote do
+      unquote(injected_rhs_ast)
+      right = result
+      expr  = unquote(code)
+      unquote(vars) =
         case right do
           unquote(left) ->
             unquote(return)
+            unquote(vars)
           _ ->
             message = PowerAssert.Assertion.render_values(expr, values)
             unquote(message_ast)
             raise ExUnit.AssertionError,
               message: message
         end
-      end
-
-    quote do
-      unquote(injected_rhs_ast)
-      right = result
-      expr  = unquote(code)
-      unquote({:case, [{:export_head, true}|meta], args})
+      right
     end
   end 
 
@@ -519,5 +519,26 @@ defmodule PowerAssert.Assertion do
         _ -> acc
       end
     end)
+  end
+
+  defp collect_vars_from_pattern(expr) do
+    {_, vars} =
+      Macro.prewalk(expr, [], fn
+        {:::, _, [left, _]}, acc ->
+          {[left], acc}
+        {skip, _, [_]}, acc when skip in [:^, :@] ->
+          {:ok, acc}
+        {:_, _, context}, acc when is_atom(context) ->
+          {:ok, acc}
+        {name, _, context}, acc when is_atom(name) and is_atom(context) ->
+          {:ok, [{name, [generated: true], context}|acc]}
+        node, acc ->
+          {node, acc}
+      end)
+    Enum.uniq(vars)
+  end
+
+  defp no_warning({name, meta, args}) do
+    {name, [line: -1] ++ meta, args}
   end
 end
