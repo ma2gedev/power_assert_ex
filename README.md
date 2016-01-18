@@ -131,6 +131,10 @@ assert(expression, message \\ nil)
   - `__MODULE__.Foo`
   - many macros maybe caught error...
 
+## Resources
+
+- [Power Assert Inside in Elixir](https://speakerdeck.com/ma2gedev/power-assert-inside-in-elixir)
+
 ## License
 
 Distributed under the Apache 2 License.
