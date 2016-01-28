@@ -133,13 +133,6 @@ See also: test/should/should_test.exs
 assert(expression, message \\ nil)
 ```
 
-## TODO
-
-- [x] `ExUnit.CaseTemplate` with `using function`
-- [x] support `assert [one] = [two]`
-  - currently rely on `ExUnit.Assertions.assert/1`
-- and more we've not yet noticed
-
 ## Limitation
 
 - NOT SUPPORTED
