@@ -36,7 +36,7 @@ Enjoy :muscle: !
 # add dependencies in mix.exs
 defp deps do
   [
-    {:power_assert, "~> 0.0.7"}
+    {:power_assert, "~> 0.0.8"}
   ]
 end
 
