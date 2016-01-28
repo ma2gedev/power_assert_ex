@@ -89,25 +89,43 @@ useful command to replace `use ExUnit.Case`
 $ git grep -l 'use ExUnit\.Case' | xargs sed -i.bak -e 's/use ExUnit\.Case/use PowerAssert/g'
 ```
 
-## How to use other framework depending on ExUnit such as ExSpec
+## How to use other framework depending on ExUnit such as ExSpec or ShouldI
 
-For instance ExSpec calls `use ExUnit` inside module, `assert` macro is already imported and conflicted with our `assert` macro.
-So avoiding conflicted problem we provide the `:use_ex_unit` option:
-If `:use_ex_unit` is set as `true`, `use PowerAssert` provides `power_assert` macro instead of `assert`. Also does not `use ExUnit.Case` inside module.
-NOTE: This option is available experimentally.
+### ExSpec
+
+Append `use PowerAssert` after `use ExSpec`:
 
 ```
 defmodule ExSpecBasedTest do
   use ExSpec
-  use PowerAssert, use_ex_unit: true    # use PowerAssert with :use_ex_unit option
+  use PowerAssert   # <-- append
 
   describe "describe" do
     it "it" do
-      power_assert something == "hoge"  # `power_assert` macro is enabled
+      assert something == "hoge"
     end
   end
 end
 ```
+
+See also: test/ex_spec/ex_spec_test.exs
+
+### ShouldI
+
+Append `use PowerAssert` after `use ShouldI`:
+
+```
+defmodule ShouldTest do
+  use ShouldI
+  use PowerAssert   # <-- append
+
+  should "inside should" do
+    assert something == "hoge"
+  end
+end
+```
+
+See also: test/should/should_test.exs
 
 ## API
 
