@@ -95,7 +95,7 @@ $ git grep -l 'use ExUnit\.Case' | xargs sed -i.bak -e 's/use ExUnit\.Case/use P
 
 Append `use PowerAssert` after `use ExSpec`:
 
-```
+```elixir
 defmodule ExSpecBasedTest do
   use ExSpec
   use PowerAssert   # <-- append
@@ -114,7 +114,7 @@ See also: test/ex_spec/ex_spec_test.exs
 
 Append `use PowerAssert` after `use ShouldI`:
 
-```
+```elixir
 defmodule ShouldTest do
   use ShouldI
   use PowerAssert   # <-- append
