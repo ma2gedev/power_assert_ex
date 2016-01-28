@@ -3,8 +3,8 @@ defmodule PowerAssert do
     use_ex_unit = Keyword.get(opts, :use_ex_unit, false)
     if !use_ex_unit do
       quote do
-        require ExUnit.Case
-        use PowerAssert.ExUnitCase, unquote(opts)
+        use ExUnit.Case, unquote(opts)
+        import ExUnit.Assertions, except: [assert: 1, assert: 2]
         import PowerAssert.Assertion
       end
     else

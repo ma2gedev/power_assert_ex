@@ -1,5 +1,10 @@
 defmodule MyCase do
-  use PowerAssert.CaseTemplate
+  use ExUnit.CaseTemplate
+  using do
+    quote do
+      use PowerAssert
+    end
+  end
 
   setup do
     {:ok, executed: "setup func"}
@@ -30,10 +35,11 @@ defmodule MyTest do
 end
 
 defmodule MyCaseUsing do
-  use PowerAssert.CaseTemplate
+  use ExUnit.CaseTemplate
 
   using do
     quote do
+      use PowerAssert
       import MyCaseUsing
     end
   end

@@ -63,23 +63,29 @@ end
 when ExUnit.CaseTemplate
 
 ```elixir
-# replace `use ExUnit.CaseTemplate` into `use PowerAssert.CaseTemplate` in your test code
+# insert `use PowerAssert` with `ExUnit.CaseTemplate.using/2` macro
 
 ## before
 defmodule YourAwesomeTest do
-  use ExUnit.CaseTemplate       # <-- **HERE**
+  use ExUnit.CaseTemplate
 end
 
 ## after
 defmodule YourAwesomeTest do
-  use PowerAssert.CaseTemplate  # <-- **REPLACED**
+  use ExUnit.CaseTemplate
+
+  # add the following
+  using do
+    quote do
+      use PowerAssert
+    end
+  end
 end
 ```
 
-useful command to replace `use ExUnit.CaseTemplate` and `use ExUnit.Case`
+useful command to replace `use ExUnit.Case`
 
 ```bash
-$ git grep -l 'use ExUnit\.CaseTemplate' | xargs sed -i.bak -e 's/use ExUnit\.CaseTemplate/use PowerAssert.CaseTemplate/g'
 $ git grep -l 'use ExUnit\.Case' | xargs sed -i.bak -e 's/use ExUnit\.Case/use PowerAssert/g'
 ```
 
