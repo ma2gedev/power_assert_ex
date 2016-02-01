@@ -1013,12 +1013,17 @@ defmodule PowerAssertAssertionTest do
       Assertion.assert update_in(users["john"][:age], &(&1 + 1)) == %{"john" => %{age: 27}}
     end)
 
-    expect = """
+    elixir_less_than_1_2 = """
     get_and_update_in(users["john"].age(), &{&1, &1 + 1}) == {27, %{"john" => %{age: 27}}}
     |
     {27, %{"john" => %{age: 28}}}
     """
-    assert_helper(expect, fn () ->
+    elixir_1_2_or_more = """
+    get_and_update_in(users["john"].age(), &({&1, &1 + 1})) == {27, %{"john" => %{age: 27}}}
+    |
+    {27, %{"john" => %{age: 28}}}
+    """
+    assert_helper([elixir_less_than_1_2, elixir_1_2_or_more], fn () ->
       users = %{"john" => %{age: 27}}
       Assertion.assert get_and_update_in(users["john"].age, &{&1, &1 + 1}) == {27, %{"john" => %{age: 27}}}
     end)
