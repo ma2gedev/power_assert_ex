@@ -150,6 +150,7 @@ assert(expression, message \\ nil)
 
 ## Resources
 
+- [Testing with Power Assert in Elixir projects](http://qiita.com/ma2ge/items/29115d0afbf97a092783)
 - [Power Assert Inside in Elixir](https://speakerdeck.com/ma2gedev/power-assert-inside-in-elixir)
 
 ## License
