@@ -17,7 +17,7 @@ end
 
 Here is the difference between ExUnit and Power Assert results:
 
-![Difference between ExUnit and Power Assert](https://github.com/ma2gedev/power_assert_ex/raw/master/difference.gif)
+![Difference between ExUnit and Power Assert](https://github.com/ma2gedev/power_assert_ex/raw/master/difference.png)
 
 Enjoy :muscle: !
 
