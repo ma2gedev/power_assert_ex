@@ -15,16 +15,9 @@ test "Enum.at should return the element at the given index" do
 end
 ```
 
-And the result is like the following:
+Here is the difference between ExUnit and Power Assert results:
 
-```
-  1) test Enum.at should return the element at the given index (PowerAssertTest)
-
-     array |> Enum.at(index) == two
-     |             |  |         |
-     |             3  2         2
-     [1, 2, 3, 4, 5, 6]
-```
+![Difference between ExUnit and Power Assert](https://github.com/ma2gedev/power_assert_ex/raw/master/difference.gif)
 
 Enjoy :muscle: !
 
