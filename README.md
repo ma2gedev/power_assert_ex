@@ -2,7 +2,7 @@
 
 [![hex.pm version](https://img.shields.io/hexpm/v/power_assert.svg)](https://hex.pm/packages/power_assert) [![hex.pm daily downloads](https://img.shields.io/hexpm/dd/power_assert.svg)](https://hex.pm/packages/power_assert) [![hex.pm weekly downloads](https://img.shields.io/hexpm/dw/power_assert.svg)](https://hex.pm/packages/power_assert) [![hex.pm downloads](https://img.shields.io/hexpm/dt/power_assert.svg)](https://hex.pm/packages/power_assert) [![Build Status](https://travis-ci.org/ma2gedev/power_assert_ex.svg?branch=master)](https://travis-ci.org/ma2gedev/power_assert_ex) [![License](https://img.shields.io/hexpm/l/power_assert.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
-Power Assert for Elixir.
+Power Assert makes test results easier to understand, without changing your ExUnit test code.
 
 Example test is here:
 
@@ -26,51 +26,48 @@ And the result is like the following:
 
 Enjoy :muscle: !
 
-## Dependencies
-
-- ExUnit
-
 ## Installation
 
+Add Power Assert to your `mix.exs` dependencies:
+
 ```
-# add dependencies in mix.exs
 defp deps do
-  [
-    {:power_assert, "~> 0.0.8"}
-  ]
+  [{:power_assert, "~> 0.0.8", only: :test}]
 end
 
-# and fetch
-$ mix deps.get
 ```
 
-## How to use
+and fetch `$ mix deps.get`.
+
+## Usage
+
+Replace `use ExUnit.Case` into `use PowerAssert` in your test code:
 
 ```elixir
-# replace `use ExUnit.Case` into `use PowerAssert` in your test code
-
-## before
+## before(ExUnit)
 defmodule YourAwesomeTest do
   use ExUnit.Case  # <-- **HERE**
 end
 
-## after
+## after(PowerAssert)
 defmodule YourAwesomeTest do
   use PowerAssert  # <-- **REPLACED**
 end
 ```
 
-when ExUnit.CaseTemplate
+Done! You can run `$ mix test`.
+
+### Use with ExUnit.CaseTemplate
+
+Insert `use PowerAssert` with `ExUnit.CaseTemplate.using/2` macro:
 
 ```elixir
-# insert `use PowerAssert` with `ExUnit.CaseTemplate.using/2` macro
-
-## before
+## before(ExUnit.CaseTemplate)
 defmodule YourAwesomeTest do
   use ExUnit.CaseTemplate
 end
 
-## after
+## after(PowerAssert)
 defmodule YourAwesomeTest do
   use ExUnit.CaseTemplate
 
@@ -83,13 +80,13 @@ defmodule YourAwesomeTest do
 end
 ```
 
-useful command to replace `use ExUnit.Case`
+### protip: useful command to replace `use ExUnit.Case`
 
 ```bash
 $ git grep -l 'use ExUnit\.Case' | xargs sed -i.bak -e 's/use ExUnit\.Case/use PowerAssert/g'
 ```
 
-## How to use other framework depending on ExUnit such as ExSpec or ShouldI
+## How to use with other framework depending on ExUnit such as ExSpec or ShouldI
 
 ### ExSpec
 
@@ -129,9 +126,15 @@ See also: test/should/should_test.exs
 
 ## API
 
+Only provide `assert` macro:
+
 ```
 assert(expression, message \\ nil)
 ```
+
+## Dependencies
+
+- ExUnit
 
 ## Limitation
 
@@ -152,6 +155,10 @@ assert(expression, message \\ nil)
 
 - [Testing with Power Assert in Elixir projects](http://qiita.com/ma2ge/items/29115d0afbf97a092783)
 - [Power Assert Inside in Elixir](https://speakerdeck.com/ma2gedev/power-assert-inside-in-elixir)
+
+## Author
+
+Takayuki Matsubara (@ma2ge on twitter)
 
 ## License
 
