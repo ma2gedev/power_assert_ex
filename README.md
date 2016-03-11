@@ -4,6 +4,8 @@
 
 Power Assert makes test results easier to understand, without changing your ExUnit test code.
 
+![Demo](https://github.com/ma2gedev/power_assert_ex/raw/master/head.gif)
+
 Example test is here:
 
 ```elixir
