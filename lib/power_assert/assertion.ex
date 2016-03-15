@@ -104,7 +104,7 @@ defmodule PowerAssert.Assertion do
     end
   end
 
-  # for avoid "this check/guard will always yield the same result"
+  # avoid a warning that "this check/guard will always yield the same result"
   defp message_ast(msg) when is_binary(msg) do
     quote do
       message = "#{unquote(msg)}\n\n" <> message
