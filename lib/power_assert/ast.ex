@@ -1,4 +1,9 @@
 defmodule PowerAssert.Ast do
+  @moduledoc """
+  this module is deprecated.
+
+  It will be replaced with `Macro.traverse` at the timing to cut support for v1.0.x and v1.1.x
+  """
 
   # almost from elixir source
   def traverse(ast, acc, pre, post) when is_function(pre, 2) and is_function(post, 2) do
