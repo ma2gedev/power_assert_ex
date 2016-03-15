@@ -112,10 +112,19 @@ defmodule PowerAssert.Assertion do
   end
   defp message_ast(_msg), do: nil
 
+  # structs
+  defmodule Detector do
+    defstruct code: nil, positions: [], in_fn: 0
+  end
+
+  defmodule Injector do
+    defstruct positions: nil, in_fn: 0
+  end
+
   @doc false
   def inject_store_code(ast, expr, default_index \\ 0) do
     positions = detect_position(ast, expr, default_index)
-    {injected_ast, {_, _}} = PowerAssert.Ast.traverse(ast, {Enum.reverse(positions), 0}, &pre_catcher/2, &catcher/2)
+    {injected_ast, _} = PowerAssert.Ast.traverse(ast, %Injector{positions: Enum.reverse(positions)}, &pre_catcher/2, &catcher/2)
     # IO.inspect injected_ast
     # IO.inspect Macro.to_string injected_ast
     quote do
@@ -128,8 +137,8 @@ defmodule PowerAssert.Assertion do
 
   ## detect positions
   defp detect_position(ast, expr, default_index) do
-    {_ast, {_code, positions, _in_fn}} =
-      PowerAssert.Ast.traverse(ast, {expr, [], 0}, &pre_collect_position/2, &collect_position/2)
+    {_ast, %Detector{positions: positions}} =
+      PowerAssert.Ast.traverse(ast, %Detector{code: expr}, &pre_collect_position/2, &collect_position/2)
     if default_index != 0 do
       positions = Enum.map(positions, fn([pos, code]) -> [default_index + pos, code] end)
     end
@@ -137,44 +146,44 @@ defmodule PowerAssert.Assertion do
   end
 
   @ignored_atoms [:fn, :&, :=, :::, :@]
-  defp pre_collect_position({atom, _, _args} = ast, {code, positions, in_fn} = _acc) when atom in @ignored_atoms do
-    {ast, {code, positions, in_fn + 1}}
+  defp pre_collect_position({atom, _, _args} = ast, detector) when atom in @ignored_atoms do
+    {ast, %{detector | in_fn: detector.in_fn + 1}}
   end
   @unsupported_func [:quote, :<<>>, :case]
-  defp pre_collect_position({func, _, _args} = ast, {code, positions, in_fn} = _acc) when func in @unsupported_func do
-    {ast, {code, positions, in_fn + 1}}
+  defp pre_collect_position({func, _, _args} = ast, detector) when func in @unsupported_func do
+    {ast, %{detector | in_fn: detector.in_fn + 1}}
   end
   @unsupported_func_arity2 [:put_in, :get_and_update_in, :update_in, :for, :match?]
   # get_and_update_in/2, put_in/2, update_in/2, for
-  defp pre_collect_position({func, _, [_, _]} = ast, {code, positions, in_fn} = _acc) when func in @unsupported_func_arity2 do
-    {ast, {code, positions, in_fn + 1}}
+  defp pre_collect_position({func, _, [_, _]} = ast, detector) when func in @unsupported_func_arity2 do
+    {ast, %{detector | in_fn: detector.in_fn + 1}}
   end
   @ignore_ops [:., :__aliases__, :|>, :==, :!=, :<, :>, :>=, :<=, :*, :||, :&&, :<>, :===, :!==, :and, :or, :=~, :%{}, :%, :->, :|, :{}]
-  defp pre_collect_position({func, _, args} = ast, {code, positions, in_fn} = acc) when not func in @ignore_ops and is_atom(func) and is_list(args) do
+  defp pre_collect_position({func, _, args} = ast, detector) when not func in @ignore_ops and is_atom(func) and is_list(args) do
     case Atom.to_string(func) do
       <<"sigil_", _name>> ->
-        {ast, {code, positions, in_fn + 1}}
+        {ast, %{detector | in_fn: detector.in_fn + 1}}
       _ ->
-        {ast, acc}
+        {ast, detector}
     end
   end
-  defp pre_collect_position(ast, acc) do
-    {ast, acc}
+  defp pre_collect_position(ast, detector) do
+    {ast, detector}
   end
   # ex:
   # context[:key]
   #        ^
-  defp collect_position({{:., _, [Access, :get]}, _, [_l, _r]} = ast, {_code, _positions, in_fn} = acc) when in_fn > 0, do: {ast, acc}
-  defp collect_position({{:., _, [Access, :get]}, _, [_l, right]} = ast, {code, positions, in_fn} = _acc) do
+  defp collect_position({{:., _, [Access, :get]}, _, [_l, _r]} = ast, %Detector{in_fn: in_fn} = detector) when in_fn > 0, do: {ast, detector}
+  defp collect_position({{:., _, [Access, :get]}, _, [_l, right]} = ast, detector) do
     func_call = Macro.to_string(ast)
-    match_indexes = match_indexes_in_code(func_call, code, :function_boundary)
+    match_indexes = match_indexes_in_code(func_call, detector.code, :function_boundary)
     right_expr = Macro.to_string(right)
     # last value is needed. ex: keywords = [value: [value: "nya"]]; keywords[:value][:value]
     [[{r_pos, r_len}]|_t] = Regex.scan(~r/\[#{Regex.escape(right_expr)}\]/, func_call, return: :index)
                             |> Enum.reverse
     match_indexes = Enum.map(match_indexes, fn ([{pos, _len}]) -> [{pos + r_pos, r_len}] end)
-    positions = insert_pos_unless_exist(positions, match_indexes, func_call)
-    {ast, {code, positions, in_fn}}
+    positions = insert_pos_unless_exist(detector.positions, match_indexes, func_call)
+    {ast, %{detector | positions: positions}}
   end
   # ex:
   # map = %{value: "nya-"}; map.value
@@ -182,101 +191,101 @@ defmodule PowerAssert.Assertion do
   #
   # List.first([1,2,3])
   #      ^
-  defp collect_position({{:., _, [_l, r_atom]}, _, _} = ast, {_code, _positions, in_fn} = acc) when is_atom(r_atom) and in_fn > 0, do: {ast, acc}
-  defp collect_position({{:., _, [_l, r_atom]}, _, _} = ast, {code, positions, in_fn} = _acc) when is_atom(r_atom) do
+  defp collect_position({{:., _, [_l, r_atom]}, _, _} = ast, %Detector{in_fn: in_fn} = detector) when is_atom(r_atom) and in_fn > 0, do: {ast, detector}
+  defp collect_position({{:., _, [_l, r_atom]}, _, _} = ast, detector) when is_atom(r_atom) do
     func_call = Macro.to_string(ast)
-    match_indexes = match_indexes_in_code(func_call, code, :function_boundary)
+    match_indexes = match_indexes_in_code(func_call, detector.code, :function_boundary)
     right_func_name = Atom.to_string(r_atom)
     # last value is needed. ex: map = %{value: %{value: "nya"}}; map.value.value
     [[{r_pos, r_len}]|_t] = Regex.scan(~r/(?!\.)#{Regex.escape(right_func_name)}/, func_call, return: :index)
                             |> Enum.reverse
     match_indexes = Enum.map(match_indexes, fn ([{pos, _len}]) -> [{pos + r_pos, r_len}] end)
-    positions = insert_pos_unless_exist(positions, match_indexes, func_call)
-    {ast, {code, positions, in_fn}}
+    positions = insert_pos_unless_exist(detector.positions, match_indexes, func_call)
+    {ast, %{detector | positions: positions}}
   end
   # ex:
   # func = fn () -> "nya-" end; func.()
   #                                  ^
-  defp collect_position({{:., _, [_l]}, _, _} = ast, {_code, _positions, in_fn} = acc) when in_fn > 0, do: {ast, acc}
-  defp collect_position({{:., _, [l]}, _, _} = ast, {code, positions, in_fn} = _acc) do
+  defp collect_position({{:., _, [_l]}, _, _} = ast, %Detector{in_fn: in_fn} = detector) when in_fn > 0, do: {ast, detector}
+  defp collect_position({{:., _, [l]}, _, _} = ast, detector) do
     func_call = Macro.to_string(ast)
-    match_indexes = match_indexes_in_code(func_call, code, :function_boundary)
+    match_indexes = match_indexes_in_code(func_call, detector.code, :function_boundary)
     length = Macro.to_string(l) |> String.length
     match_indexes = Enum.map(match_indexes, fn ([{pos, len}]) -> [{pos + length + 1, len}] end)
-    positions = insert_pos_unless_exist(positions, match_indexes, func_call)
-    {ast, {code, positions, in_fn}}
+    positions = insert_pos_unless_exist(detector.positions, match_indexes, func_call)
+    {ast, %{detector | positions: positions}}
   end
   # ex:
   # x + y
   #   ^
   @arithmetic_ops [:*, :+, :-, :/, :++, :--]
-  defp collect_position({op, _, [_l, _r]} = ast, {_code, _positions, in_fn} = acc) when op in @arithmetic_ops and in_fn > 0, do: {ast, acc}
-  defp collect_position({op, _, [l, _r]} = ast, {code, positions, in_fn} = _acc) when op in @arithmetic_ops do
+  defp collect_position({op, _, [_l, _r]} = ast, %Detector{in_fn: in_fn} = detector) when op in @arithmetic_ops and in_fn > 0, do: {ast, detector}
+  defp collect_position({op, _, [l, _r]} = ast, detector) when op in @arithmetic_ops do
     func_call = Macro.to_string(ast)
-    match_indexes = match_indexes_in_code(func_call, code, :function_boundary)
+    match_indexes = match_indexes_in_code(func_call, detector.code, :function_boundary)
     left_expr_len = Macro.to_string(l) |> String.length
     op_len = Atom.to_string(op) |> String.length
     match_indexes = Enum.map(match_indexes, fn ([{pos, _len}]) -> [{pos + left_expr_len + 1, op_len}] end)
-    positions = insert_pos_unless_exist(positions, match_indexes, func_call)
-    {ast, {code, positions, in_fn}}
+    positions = insert_pos_unless_exist(detector.positions, match_indexes, func_call)
+    {ast, %{detector | positions: positions}}
   end
   # ex:
   # fn(x) -> x == 1 end.(2)
   # @module_attribute
-  defp collect_position({atom, _, _args} = ast, {code, positions, in_fn} = _acc) when atom in @ignored_atoms do
-    if atom == :@ and in_fn == 1 do
+  defp collect_position({atom, _, _args} = ast, detector) when atom in @ignored_atoms do
+    if atom == :@ and detector.in_fn == 1 do
       func_code = Macro.to_string(ast)
-      match_indexes = match_indexes_in_code(func_code, code, :function)
-      positions = insert_pos_unless_exist(positions, match_indexes, func_code)
-      {ast, {code, positions, in_fn - 1}}
+      match_indexes = match_indexes_in_code(func_code, detector.code, :function)
+      positions = insert_pos_unless_exist(detector.positions, match_indexes, func_code)
+      {ast, %{detector | positions: positions, in_fn: detector.in_fn - 1}}
     else
-      {ast, {code, positions, in_fn - 1}}
+      {ast, %{detector | in_fn: detector.in_fn - 1}}
     end
   end
   # ex:
   # disregard inner ast
   # quote do: :hoge
   # ^
-  defp collect_position({func, _, _args} = ast, {code, positions, in_fn} = _acc) when func in @unsupported_func do
-    if in_fn == 1 do
+  defp collect_position({func, _, _args} = ast, detector) when func in @unsupported_func do
+    if detector.in_fn == 1 do
       func_code = Macro.to_string(ast)
-      match_indexes = match_indexes_in_code(func_code, code, :function)
-      positions = insert_pos_unless_exist(positions, match_indexes, func_code)
-      {ast, {code, positions, in_fn - 1}}
+      match_indexes = match_indexes_in_code(func_code, detector.code, :function)
+      positions = insert_pos_unless_exist(detector.positions, match_indexes, func_code)
+      {ast, %{detector | positions: positions, in_fn: detector.in_fn - 1}}
     else
-      {ast, {code, positions, in_fn - 1}}
+      {ast, %{detector | in_fn: detector.in_fn - 1}}
     end
   end
   # ex:
   # get_and_update_in/2, put_in/2, update_in/2, for needs special format for first argument
-  defp collect_position({func, _, [_, _]} = ast, {code, positions, in_fn} = _acc) when func in @unsupported_func_arity2 do
-    if in_fn == 1 do
+  defp collect_position({func, _, [_, _]} = ast, detector) when func in @unsupported_func_arity2 do
+    if detector.in_fn == 1 do
       func_code = Macro.to_string(ast)
-      match_indexes = match_indexes_in_code(func_code, code, :function)
-      positions = insert_pos_unless_exist(positions, match_indexes, func_code)
-      {ast, {code, positions, in_fn - 1}}
+      match_indexes = match_indexes_in_code(func_code, detector.code, :function)
+      positions = insert_pos_unless_exist(detector.positions, match_indexes, func_code)
+      {ast, %{detector | positions: positions, in_fn: detector.in_fn - 1}}
     else
-      {ast, {code, positions, in_fn - 1}}
+      {ast, %{detector | in_fn: detector.in_fn - 1}}
     end
   end
   # ex:
   # import List
   # [1, 2] |> first()
   #           ^
-  defp collect_position({func, _, args} = ast, {code, positions, in_fn} = acc) when not func in @ignore_ops and is_atom(func) and is_list(args) and in_fn > 0 do
+  defp collect_position({func, _, args} = ast, %Detector{in_fn: in_fn} = detector) when not func in @ignore_ops and is_atom(func) and is_list(args) and in_fn > 0 do
     case Atom.to_string(func) do
       # not supported sigils
       <<"sigil_", _name>> ->
-        {ast, {code, positions, in_fn - 1}}
+        {ast, %{detector | in_fn: detector.in_fn - 1}}
       _ ->
-        {ast, acc}
+        {ast, detector}
     end
   end
-  defp collect_position({func, _, args} = ast, {code, positions, in_fn}) when not func in @ignore_ops and is_atom(func) and is_list(args) do
+  defp collect_position({func, _, args} = ast, detector) when not func in @ignore_ops and is_atom(func) and is_list(args) do
     func_code = Macro.to_string(ast)
-    matches = Regex.scan(~r/(?<!\.)#{Regex.escape(func_code)}/, code, return: :index)
-    positions = insert_pos_unless_exist(positions, matches, func_code)
-    {ast, {code, positions, in_fn}}
+    matches = Regex.scan(~r/(?<!\.)#{Regex.escape(func_code)}/, detector.code, return: :index)
+    positions = insert_pos_unless_exist(detector.positions, matches, func_code)
+    {ast, %{detector | positions: positions}}
   end
   # ex:
   # x == y
@@ -284,14 +293,14 @@ defmodule PowerAssert.Assertion do
   #
   # List.first(values)
   #            ^
-  defp collect_position({variable, _, el} = ast, {_code, _positions, in_fn} = acc) when is_atom(variable) and is_atom(el) and in_fn > 0, do: {ast, acc}
-  defp collect_position({variable, _, el} = ast, {code, positions, in_fn} = _acc) when is_atom(variable) and is_atom(el) do
+  defp collect_position({variable, _, el} = ast, %Detector{in_fn: in_fn} = detector) when is_atom(variable) and is_atom(el) and in_fn > 0, do: {ast, detector}
+  defp collect_position({variable, _, el} = ast, detector) when is_atom(variable) and is_atom(el) do
     code_fragment = Macro.to_string(ast)
-    match_indexes = match_indexes_in_code(code_fragment, code, :variable)
-    positions = insert_pos_unless_exist(positions, match_indexes, code_fragment)
-    {ast, {code, positions, in_fn}}
+    match_indexes = match_indexes_in_code(code_fragment, detector.code, :variable)
+    positions = insert_pos_unless_exist(detector.positions, match_indexes, code_fragment)
+    {ast, %{detector | positions: positions}}
   end
-  defp collect_position(ast, acc), do: {ast, acc}
+  defp collect_position(ast, detector), do: {ast, detector}
 
   defp match_indexes_in_code(code_fragment, code, :function_boundary) do
     Regex.scan(~r/\b#{Regex.escape(code_fragment)}/, code, return: :index)
@@ -328,25 +337,25 @@ defmodule PowerAssert.Assertion do
     {:none, ast}
   end
 
-  defp pre_catcher({atom, _, _args} = ast, {pos, in_fn} = _acc) when atom in @ignored_atoms do
-    {ast, {pos, in_fn + 1}}
+  defp pre_catcher({atom, _, _args} = ast, injector) when atom in @ignored_atoms do
+    {ast, %{injector | in_fn: injector.in_fn + 1}}
   end
-  defp pre_catcher({func, _, _args} = ast, {pos, in_fn} = _acc) when func in @unsupported_func do
-    {ast, {pos, in_fn + 1}}
+  defp pre_catcher({func, _, _args} = ast, injector) when func in @unsupported_func do
+    {ast, %{injector | in_fn: injector.in_fn + 1}}
   end
-  defp pre_catcher({func, _, [_, _]} = ast, {pos, in_fn} = _acc) when func in @unsupported_func_arity2 do
-    {ast, {pos, in_fn + 1}}
+  defp pre_catcher({func, _, [_, _]} = ast, injector) when func in @unsupported_func_arity2 do
+    {ast, %{injector | in_fn: injector.in_fn + 1}}
   end
-  defp pre_catcher({func, _, args} = ast, {pos, in_fn} = acc) when not func in @ignore_ops and is_atom(func) and is_list(args) do
+  defp pre_catcher({func, _, args} = ast, injector) when not func in @ignore_ops and is_atom(func) and is_list(args) do
     case Atom.to_string(func) do
       <<"sigil_", _name>> ->
-        {ast, {pos, in_fn + 1}}
+        {ast, %{injector | in_fn: injector.in_fn + 1}}
       _ ->
-        {ast, acc}
+        {ast, injector}
     end
   end
-  defp pre_catcher(ast, acc) do
-    {ast, acc}
+  defp pre_catcher(ast, injector) do
+    {ast, injector}
   end
 
   defp store_value_ast(ast, pos) do
@@ -357,8 +366,8 @@ defmodule PowerAssert.Assertion do
     end
   end
 
-  defp catcher({:|>, _meta, [_l, _r]} = ast, {_pos, in_fn} = acc) when in_fn > 0, do: {ast, acc}
-  defp catcher({:|>, _meta, [l, r]}, acc) do
+  defp catcher({:|>, _meta, [_l, _r]} = ast, %Injector{in_fn: in_fn} = injector) when in_fn > 0, do: {ast, injector}
+  defp catcher({:|>, _meta, [l, r]}, injector) do
     {res, r_ast} = inject_first_argument(r)
     ast = if res == :inject do
             quote do
@@ -370,64 +379,64 @@ defmodule PowerAssert.Assertion do
               unquote(l) |> unquote(r_ast)
             end
           end
-    {ast, acc}
+    {ast, injector}
   end
-  defp catcher({{:., _, [Access, :get]}, _, [_l, _r]} = ast, {_pos, in_fn} = acc) when in_fn > 0, do: {ast, acc}
-  defp catcher({{:., _, [Access, :get]}, _, [_l, _r]} = ast, {[[pos, _]|t], in_fn}) do
-    {store_value_ast(ast, pos), {t, in_fn}}
+  defp catcher({{:., _, [Access, :get]}, _, [_l, _r]} = ast, %Injector{in_fn: in_fn} = injector) when in_fn > 0, do: {ast, injector}
+  defp catcher({{:., _, [Access, :get]}, _, [_l, _r]} = ast, %Injector{positions: [[pos, _]|t]} = injector) do
+    {store_value_ast(ast, pos), %{injector | positions: t}}
   end
-  defp catcher({{:., _, [_l, r_atom]}, _meta, _} = ast, {_pos, in_fn} = acc) when is_atom(r_atom) and in_fn > 0, do: {ast, acc}
-  defp catcher({{:., _, [_l, r_atom]}, _meta, _} = ast, {[[pos, _]|t], in_fn}) when is_atom(r_atom) do
-    {store_value_ast(ast, pos), {t, in_fn}}
+  defp catcher({{:., _, [_l, r_atom]}, _meta, _} = ast, %Injector{in_fn: in_fn} = injector) when is_atom(r_atom) and in_fn > 0, do: {ast, injector}
+  defp catcher({{:., _, [_l, r_atom]}, _meta, _} = ast, %Injector{positions: [[pos, _]|t]} = injector) when is_atom(r_atom) do
+    {store_value_ast(ast, pos), %{injector | positions: t}}
   end
-  defp catcher({{:., _, [_l]}, _, _} = ast, {_pos, in_fn} = acc) when in_fn > 0, do: {ast, acc}
-  defp catcher({{:., _, [_l]}, _, _} = ast, {[[pos, _]|t], in_fn}) do
-    {store_value_ast(ast, pos), {t, in_fn}}
+  defp catcher({{:., _, [_l]}, _, _} = ast, %Injector{in_fn: in_fn} = injector) when in_fn > 0, do: {ast, injector}
+  defp catcher({{:., _, [_l]}, _, _} = ast, %Injector{positions: [[pos, _]|t]} = injector) do
+    {store_value_ast(ast, pos), %{injector | positions: t}}
   end
-  defp catcher({op, _, [_l, _r]} = ast, {_pos, in_fn} = acc) when op in @arithmetic_ops and in_fn > 0, do: {ast, acc}
-  defp catcher({op, _, [_l, _r]} = ast, {[[pos, _]|t], in_fn}) when op in @arithmetic_ops do
-    {store_value_ast(ast, pos), {t, in_fn}}
+  defp catcher({op, _, [_l, _r]} = ast, %Injector{in_fn: in_fn} = injector) when op in @arithmetic_ops and in_fn > 0, do: {ast, injector}
+  defp catcher({op, _, [_l, _r]} = ast, %Injector{positions: [[pos, _]|t]} = injector) when op in @arithmetic_ops do
+    {store_value_ast(ast, pos), %{injector | positions: t}}
   end
-  defp catcher({atom, _, _args} = ast, {[h|t], in_fn} = _acc) when atom in @ignored_atoms do
-    if atom == :@ and in_fn == 1 do
+  defp catcher({atom, _, _args} = ast, %Injector{positions: [h|t]} = injector) when atom in @ignored_atoms do
+    if atom == :@ and injector.in_fn == 1 do
       [pos, _] = h
-      {store_value_ast(ast, pos), {t, in_fn - 1}}
+      {store_value_ast(ast, pos), %{injector | positions: t, in_fn: injector.in_fn - 1}}
     else
-      {ast, {[h|t], in_fn - 1}}
+      {ast, %{injector | in_fn: injector.in_fn - 1}}
     end
   end
-  defp catcher({func, _, _args} = ast, {[h|t], in_fn} = _acc) when func in @unsupported_func do
-    if in_fn == 1 do
+  defp catcher({func, _, _args} = ast, %Injector{positions: [h|t]} = injector) when func in @unsupported_func do
+    if injector.in_fn == 1 do
       [pos, _] = h
-      {store_value_ast(ast, pos), {t, in_fn - 1}}
+      {store_value_ast(ast, pos), %{injector | positions: t, in_fn: injector.in_fn - 1}}
     else
-      {ast, {[h|t], in_fn - 1}}
+      {ast, %{injector | in_fn: injector.in_fn - 1}}
     end
   end
-  defp catcher({func, _, [_, _]} = ast, {[h|t], in_fn} = _acc) when func in @unsupported_func_arity2 do
-    if in_fn == 1 do
+  defp catcher({func, _, [_, _]} = ast, %Injector{positions: [h|t]} = injector) when func in @unsupported_func_arity2 do
+    if injector.in_fn == 1 do
       [pos, _] = h
-      {store_value_ast(ast, pos), {t, in_fn - 1}}
+      {store_value_ast(ast, pos), %{injector | positions: t, in_fn: injector.in_fn - 1}}
     else
-      {ast, {[h|t], in_fn - 1}}
+      {ast, %{injector | in_fn: injector.in_fn - 1}}
     end
   end
-  defp catcher({func, _, args} = ast, {[h|t], in_fn} = acc) when not func in @ignore_ops and is_atom(func) and is_list(args) and in_fn > 0 do
+  defp catcher({func, _, args} = ast, %Injector{positions: [h|t], in_fn: in_fn} = injector) when not func in @ignore_ops and is_atom(func) and is_list(args) and in_fn > 0 do
     case Atom.to_string(func) do
       <<"sigil_", _name>> ->
-        {ast, {[h|t], in_fn - 1}}
+        {ast, %{injector | in_fn: injector.in_fn - 1}}
       _ ->
-        {ast, acc}
+        {ast, injector}
     end
   end
-  defp catcher({func, _, args} = ast, {[[pos, _]|t], in_fn}) when not func in @ignore_ops and is_atom(func) and is_list(args) do
-    {store_value_ast(ast, pos), {t, in_fn}}
+  defp catcher({func, _, args} = ast, %Injector{positions: [[pos, _]|t]} = injector) when not func in @ignore_ops and is_atom(func) and is_list(args) do
+    {store_value_ast(ast, pos), %{injector | positions: t}}
   end
-  defp catcher({variable, _, el} = ast, {_pos, in_fn} = acc) when is_atom(variable) and is_atom(el) and in_fn > 0, do: {ast, acc}
-  defp catcher({variable, _, el} = ast, {[[pos, _]|t], in_fn}) when is_atom(variable) and is_atom(el) do
-    {store_value_ast(ast, pos), {t, in_fn}}
+  defp catcher({variable, _, el} = ast, %Injector{in_fn: in_fn} = injector) when is_atom(variable) and is_atom(el) and in_fn > 0, do: {ast, injector}
+  defp catcher({variable, _, el} = ast, %Injector{positions: [[pos, _]|t]} = injector) when is_atom(variable) and is_atom(el) do
+    {store_value_ast(ast, pos), %{injector | positions: t}}
   end
-  defp catcher(ast, acc), do: {ast, acc}
+  defp catcher(ast, injector), do: {ast, injector}
 
 
   ## render
