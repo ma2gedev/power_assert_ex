@@ -27,7 +27,7 @@ Add Power Assert to your `mix.exs` dependencies:
 
 ```
 defp deps do
-  [{:power_assert, "~> 0.0.8", only: :test}]
+  [{:power_assert, "~> 0.0.9", only: :test}]
 end
 
 ```
