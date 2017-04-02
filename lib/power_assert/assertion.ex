@@ -6,6 +6,12 @@ defmodule PowerAssert.Assertion do
   @assign_len 3 # length of " = "
   @equal_len  4 # length of " == "
 
+  @no_warning_annotation (if :erlang.system_info(:otp_release) >= '19' do
+    [generated: true]
+  else
+    [line: -1]
+  end)
+
   @doc """
   assert with descriptive messages
 
@@ -548,6 +554,6 @@ defmodule PowerAssert.Assertion do
   end
 
   defp no_warning({name, meta, args}) do
-    {name, [line: -1] ++ meta, args}
+    {name, @no_warning_annotation ++ meta, args}
   end
 end

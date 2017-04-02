@@ -33,7 +33,14 @@ defmodule PowerAssert.Mixfile do
   #
   # Type `mix help deps` for more examples and options
   defp deps do
-    [{:ex_spec, "~> 1.0.0", only: :test},
+    [ex_spec_dep(Version.compare(System.version, "1.3.0")),
      {:shouldi, only: :test}]
+  end
+
+  defp ex_spec_dep(:lt) do
+    {:ex_spec, "~> 1.0", only: :test}
+  end
+  defp ex_spec_dep(_) do
+    {:ex_spec, ">= 2.0.0", only: :test}
   end
 end
