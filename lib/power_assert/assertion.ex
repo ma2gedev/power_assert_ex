@@ -145,10 +145,12 @@ defmodule PowerAssert.Assertion do
   defp detect_position(ast, expr, default_index) do
     {_ast, %Detector{positions: positions}} =
       PowerAssert.Ast.traverse(ast, %Detector{code: expr}, &pre_collect_position/2, &collect_position/2)
-    if default_index != 0 do
-      positions = Enum.map(positions, fn([pos, code]) -> [default_index + pos, code] end)
-    end
-    positions
+    adjust_positions(positions, default_index)
+  end
+
+  defp adjust_positions(positions, 0), do: positions
+  defp adjust_positions(positions, default_index) do
+    Enum.map(positions, fn([pos, code]) -> [default_index + pos, code] end)
   end
 
   @ignored_atoms [:fn, :&, :=, :::, :@]
@@ -466,18 +468,19 @@ defmodule PowerAssert.Assertion do
     [[pos, value]|t] = values
     value = inspect(value)
     value_len = String.length(value)
-    if latest_pos != -1 && latest_pos - (pos + value_len) > 0 do
-      [last_line|tail_lines] = lines |> Enum.reverse
-      {before_str, after_str} = String.split_at(last_line, pos)
-      {_removed_str, after_str} = String.split_at(after_str, value_len)
-      line = before_str <> value <> after_str
-      lines = [line|tail_lines] |> Enum.reverse
-    else
-      line = String.duplicate(" ", pos + 1)
-      line = replace_with_bar(line, values)
-      line = String.replace(line, ~r/\|$/, value)
-      lines = lines ++ [line]
-    end
+    lines =
+      if latest_pos != -1 && latest_pos - (pos + value_len) > 0 do
+        [last_line|tail_lines] = lines |> Enum.reverse
+        {before_str, after_str} = String.split_at(last_line, pos)
+        {_removed_str, after_str} = String.split_at(after_str, value_len)
+        line = before_str <> value <> after_str
+        [line|tail_lines] |> Enum.reverse
+      else
+        line = String.duplicate(" ", pos + 1)
+        line = replace_with_bar(line, values)
+        line = String.replace(line, ~r/\|$/, value)
+        lines ++ [line]
+      end
     make_lines(lines, times - 1, t, pos)
   end
 
@@ -494,24 +497,18 @@ defmodule PowerAssert.Assertion do
     |> Enum.join("\n")
   end
   defp extra_information(left, right) when is_map(left) and is_map(right) do
-    if Map.has_key? left, :__struct__ do
-      left = Map.from_struct(left)
-      right = Map.from_struct(right)
-    end
+    {left, right} = adjust_lhs_and_rhs(left, right, Map.has_key?(left, :__struct__))
     in_left = Map.split(left, Map.keys(right)) |> elem(1)
     in_right = Map.split(right, Map.keys(left)) |> elem(1)
     str = "\n"
-    unless Map.size(in_left) == 0 do
-      str = str <> "\nonly in lhs: " <> inspect(in_left)
-    end
-    unless Map.size(in_right) == 0 do
-      str = str <> "\nonly in rhs: " <> inspect(in_right)
-    end
+          |> extra_information_only_in_lhs(in_left, Map.size(in_left))
+          |> extra_information_only_in_rhs(in_right, Map.size(in_right))
     diff = collect_map_diff(left, right)
     unless Enum.empty?(diff) do
-      str = str <> "\ndifference:\n" <> Enum.join(diff, "\n")
+      str <> "\ndifference:\n" <> Enum.join(diff, "\n")
+    else
+      str
     end
-    str
   end
   defp extra_information(left, right) do
     if String.valid?(left) && String.valid?(right) do
@@ -519,6 +516,21 @@ defmodule PowerAssert.Assertion do
     else
       ""
     end
+  end
+
+  defp extra_information_only_in_lhs(str, _in_left, 0), do: str
+  defp extra_information_only_in_lhs(str, in_left, _left_item_num) do
+    str <> "\nonly in lhs: " <> inspect(in_left)
+  end
+  defp extra_information_only_in_rhs(str, _in_right, 0), do: str
+  defp extra_information_only_in_rhs(str, in_right, _right_item_num) do
+    str <> "\nonly in rhs: " <> inspect(in_right)
+  end
+  defp adjust_lhs_and_rhs(left, right, true) do
+    {Map.from_struct(left), Map.from_struct(right)}
+  end
+  defp adjust_lhs_and_rhs(left, right, _is_struct) do
+    {left, right}
   end
 
   defp extra_information_for_string(left, right) do
