@@ -13,21 +13,23 @@ defmodule PowerAssert.Ast do
 
   defp do_traverse({form, meta, args}, acc, pre, post) do
     {form, acc} =
-      unless is_atom(form) do
-        {form, acc} = pre.(form, acc)
-        do_traverse(form, acc, pre, post)
-      else
-        {form, acc}
+      case is_atom(form) do
+        false ->
+          {form, acc} = pre.(form, acc)
+          do_traverse(form, acc, pre, post)
+        true ->
+          {form, acc}
       end
 
     {args, acc} =
-      unless is_atom(args) do
-        Enum.map_reduce(args, acc, fn x, acc ->
-          {x, acc} = pre.(x, acc)
-          do_traverse(x, acc, pre, post)
-        end)
-      else
-        {args, acc}
+      case is_atom(args) do
+        false ->
+          Enum.map_reduce(args, acc, fn x, acc ->
+            {x, acc} = pre.(x, acc)
+            do_traverse(x, acc, pre, post)
+          end)
+        true ->
+          {args, acc}
       end
 
     post.({form, meta, args}, acc)

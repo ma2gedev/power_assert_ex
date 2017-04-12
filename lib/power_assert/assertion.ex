@@ -471,11 +471,11 @@ defmodule PowerAssert.Assertion do
     value_len = String.length(value)
     lines =
       if latest_pos != -1 && latest_pos - (pos + value_len) > 0 do
-        [last_line|tail_lines] = lines |> Enum.reverse
+        [last_line|tail_lines] = Enum.reverse(lines)
         {before_str, after_str} = String.split_at(last_line, pos)
         {_removed_str, after_str} = String.split_at(after_str, value_len)
         line = before_str <> value <> after_str
-        [line|tail_lines] |> Enum.reverse
+        Enum.reverse([line|tail_lines])
       else
         line = String.duplicate(" ", pos + 1)
         line = replace_with_bar(line, values)
@@ -498,29 +498,28 @@ defmodule PowerAssert.Assertion do
     |> Enum.join("\n")
   end
   defp extra_information(left, right) when is_map(left) and is_map(right) do
-    left = left |> Map.delete(:__struct__)
-    right = right |> Map.delete(:__struct__)
+    left = Map.delete(left, :__struct__)
+    right = Map.delete(right, :__struct__)
     in_left = Map.split(left, Map.keys(right)) |> elem(1)
     in_right = Map.split(right, Map.keys(left)) |> elem(1)
     str = "\n"
     str =
-      unless Map.size(in_left) == 0 do
+      if Map.size(in_left) != 0 do
         str <> "\nonly in lhs: " <> inspect(in_left)
       else
         str
       end
     str =
-      unless Map.size(in_right) == 0 do
+      if Map.size(in_right) != 0 do
         str <> "\nonly in rhs: " <> inspect(in_right)
       else
         str
       end
     diff = collect_map_diff(left, right)
     str =
-      unless Enum.empty?(diff) do
-        str <> "\ndifference:\n" <> Enum.join(diff, "\n")
-      else
-        str
+      case Enum.empty?(diff) do
+        true -> str
+        false -> str <> "\ndifference:\n" <> Enum.join(diff, "\n")
       end
     str
   end
