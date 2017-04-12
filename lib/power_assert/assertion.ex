@@ -429,7 +429,7 @@ defmodule PowerAssert.Assertion do
       {ast, %{injector | in_fn: injector.in_fn - 1}}
     end
   end
-  defp catcher({func, _, args} = ast, %Injector{positions: [h|t], in_fn: in_fn} = injector) when not func in @ignore_ops and is_atom(func) and is_list(args) and in_fn > 0 do
+  defp catcher({func, _, args} = ast, %Injector{positions: [_h|_t], in_fn: in_fn} = injector) when not func in @ignore_ops and is_atom(func) and is_list(args) and in_fn > 0 do
     case Atom.to_string(func) do
       <<"sigil_", _name>> ->
         {ast, %{injector | in_fn: injector.in_fn - 1}}
