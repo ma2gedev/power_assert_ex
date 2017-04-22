@@ -859,18 +859,24 @@ defmodule PowerAssertAssertionTest do
   test "fn expr not supported" do
     # could not
     # expect = """
-    # fn x -> x == 1 end.(x)
-    #                    ||
-    #                    |2
-    #                    false
+    # (fn x -> x == 1 end).(x)
+    #                      ||
+    #                      |2
+    #                      false
     # """
-    expect = """
+    expect_1_3_or_earlier = """
     fn x -> x == 1 end.(y)
                        ||
                        |2
                        false
     """
-    assert_helper(expect, fn () ->
+    expect_1_4_or_later = """
+    (fn x -> x == 1 end).(y)
+                         ||
+                         |2
+                         false
+    """
+    assert_helper([expect_1_3_or_earlier, expect_1_4_or_later], fn () ->
       y = 2
       Assertion.assert fn(x) -> x == 1 end.(y)
     end)
