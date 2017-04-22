@@ -219,7 +219,7 @@ defmodule PowerAssert.Assertion do
   defp collect_position({{:., _, [l]}, _, _} = ast, detector) do
     func_call = Macro.to_string(ast)
     match_indexes = match_indexes_in_code(func_call, detector.code, :function_boundary)
-    length = Macro.to_string(l) |> String.length
+    length = function_expression(l) |> String.length
     match_indexes = Enum.map(match_indexes, fn ([{pos, len}]) -> [{pos + length + 1, len}] end)
     positions = insert_pos_unless_exist(detector.positions, match_indexes, func_call)
     {ast, %{detector | positions: positions}}
@@ -312,7 +312,7 @@ defmodule PowerAssert.Assertion do
   defp collect_position(ast, detector), do: {ast, detector}
 
   defp match_indexes_in_code(code_fragment, code, :function_boundary) do
-    Regex.scan(~r/\b#{Regex.escape(code_fragment)}/, code, return: :index)
+    Regex.scan(~r/#{Regex.escape(code_fragment)}/, code, return: :index)
   end
   defp match_indexes_in_code(code_fragment, code, :function) do
     Regex.scan(~r/#{Regex.escape(code_fragment)}/, code, return: :index)
@@ -334,6 +334,17 @@ defmodule PowerAssert.Assertion do
     end
   end
 
+  defp function_expression({:fn, _, _args} = left_ast) do
+    case Version.compare(System.version, "1.4.0") do
+      :lt ->
+        Macro.to_string(left_ast)
+      _ ->
+        "(#{Macro.to_string(left_ast)})"
+    end
+  end
+  defp function_expression(left_ast) do
+    Macro.to_string(left_ast)
+  end
 
   ## injection
   defp inject_first_argument({:__block__, block_meta, [first, second, third]} = _ast) do
