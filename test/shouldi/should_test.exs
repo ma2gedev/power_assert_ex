@@ -22,7 +22,7 @@ defmodule ShouldTest do
 
   having "use power assert inside having" do
     setup context do
-      Dict.put context, :arr, [1,2,3]
+      Map.put context, :arr, [1,2,3]
     end
     should "use power assert", context do
       try do
