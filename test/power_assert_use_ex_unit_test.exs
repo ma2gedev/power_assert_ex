@@ -18,7 +18,7 @@ defmodule PowerAssertUseExUnitTest do
     power_assert fn(x) -> x == 1 end.(1)
     power_assert __ENV__.aliases |> Kernel.==([])
     power_assert [1,2] |> first() |> Kernel.==(1)
-    power_assert self |> Kernel.==(self)
+    power_assert self() |> Kernel.==(self())
     power_assert [1,2,3] |> Enum.take(1) |> List.delete(1) |> Enum.empty?
   end
 

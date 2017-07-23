@@ -15,7 +15,7 @@ defmodule PowerAssertTest do
     assert fn(x) -> x == 1 end.(1)
     assert __ENV__.aliases |> Kernel.==([])
     assert [1,2] |> first() |> Kernel.==(1)
-    assert self |> Kernel.==(self)
+    assert self() |> Kernel.==(self())
     assert [1,2,3] |> Enum.take(1) |> List.delete(1) |> Enum.empty?
   end
 
