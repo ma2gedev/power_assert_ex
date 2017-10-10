@@ -7,7 +7,7 @@ defmodule PowerAssert.Ast do
 
   # almost from elixir source
   def traverse(ast, acc, pre, post) when is_function(pre, 2) and is_function(post, 2) do
-    {ast, acc} = pre.(ast, acc) 
+    {ast, acc} = pre.(ast, acc)
     do_traverse(ast, acc, pre, post)
   end
 
@@ -17,6 +17,7 @@ defmodule PowerAssert.Ast do
         false ->
           {form, acc} = pre.(form, acc)
           do_traverse(form, acc, pre, post)
+
         true ->
           {form, acc}
       end
@@ -28,15 +29,16 @@ defmodule PowerAssert.Ast do
             {x, acc} = pre.(x, acc)
             do_traverse(x, acc, pre, post)
           end)
+
         true ->
           {args, acc}
       end
 
     post.({form, meta, args}, acc)
-  end  
+  end
 
   defp do_traverse({left, right}, acc, pre, post) do
-    {left, acc} = pre.(left, acc) 
+    {left, acc} = pre.(left, acc)
     {left, acc} = do_traverse(left, acc, pre, post)
     {right, acc} = pre.(right, acc)
     {right, acc} = do_traverse(right, acc, pre, post)
@@ -44,10 +46,12 @@ defmodule PowerAssert.Ast do
   end
 
   defp do_traverse(list, acc, pre, post) when is_list(list) do
-    {list, acc} = Enum.map_reduce(list, acc, fn x, acc ->
-      {x, acc} = pre.(x, acc)
-      do_traverse(x, acc, pre, post)
-    end)
+    {list, acc} =
+      Enum.map_reduce(list, acc, fn x, acc ->
+        {x, acc} = pre.(x, acc)
+        do_traverse(x, acc, pre, post)
+      end)
+
     post.(list, acc)
   end
 
