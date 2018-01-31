@@ -789,13 +789,19 @@ defmodule PowerAssertAssertionTest do
       Assertion.assert -x == +y
     end)
 
-    expect = """
+    expect_1_5_or_earlier = """
     not x
     |   |
     |   true
     false
     """
-    assert_helper(expect, fn () ->
+    expect_1_6_or_later = """
+    not(x)
+    |   |
+    |   true
+    false
+    """
+    assert_helper([expect_1_5_or_earlier, expect_1_6_or_later], fn () ->
       x = true
       Assertion.assert not x
     end)
