@@ -9,7 +9,7 @@ defmodule PowerAssertTest do
     _one = "aiueo"
     two = 2
     assert [_one] = [two]
-    assert match?(x, "fuga")
+    assert match?(_x, "fuga")
     keywords = [value: [value: "hoge"]]
     assert keywords[:value][:value] == "hoge"
     assert fn(x) -> x == 1 end.(1)
@@ -901,13 +901,13 @@ defmodule PowerAssertAssertionTest do
 
   test "= expr not supported" do
     expect = """
-    List.first(x = array)
+    List.first(_x = array)
          |
          false
     """
     assert_helper(expect, fn () ->
       array = [false, true]
-      Assertion.assert List.first(x = array)
+      Assertion.assert List.first(_x = array)
     end)
   end
 
