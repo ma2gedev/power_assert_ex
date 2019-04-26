@@ -263,13 +263,13 @@ defmodule PowerAssertAssertionTest do
   end
 
   test "&& expr" do
+    num = :rand.uniform(3) + 13 # avoid "this check/guard will always yield the same result"
     expect = """
     5 < num && num < 13
         |      |
-        16     16
+        #{num}     #{num}
     """
     assert_helper(expect, fn () ->
-      num = 16
       Assertion.assert 5 < num && num < 13
     end)
   end
@@ -635,8 +635,9 @@ defmodule PowerAssertAssertionTest do
     true false
     """
     assert_helper(expect, fn () ->
-      x = true
-      y = false
+      # avoid "this check/guard will always yield the same result"
+      x = !!:rand.uniform(1)
+      y = !:rand.uniform(1)
       Assertion.assert x && y
     end)
 
