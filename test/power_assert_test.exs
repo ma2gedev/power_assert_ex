@@ -437,7 +437,7 @@ defmodule PowerAssertAssertionTest do
     |    |
     |    false
     #Function<
-    """ |> String.strip
+    """ |> String.trim
     expect = ~r/#{Regex.escape(expect_str)}/
     assert_helper(expect, fn () ->
       func = fn () -> false end
@@ -452,7 +452,7 @@ defmodule PowerAssertAssertionTest do
     |    |false
     |    false
     #Function<
-    """ |> String.strip
+    """ |> String.trim
     expect = ~r/#{Regex.escape(expect)}/
     assert_helper(expect, fn () ->
       value = false
@@ -468,7 +468,7 @@ defmodule PowerAssertAssertionTest do
     |    |"hoge"  "fuga"
     |    false
     #Function<
-    """ |> String.strip
+    """ |> String.trim
     expect = ~r/#{Regex.escape(expect)}/
     assert_helper(expect, fn () ->
       value1 = "hoge"
@@ -485,12 +485,12 @@ defmodule PowerAssertAssertionTest do
     |   ||    |       |   |3      1
     |   ||    |       |   4
     |   |1    2       #Function<
-    """ |> String.strip
+    """ |> String.trim
     expect2 = """
     >
     |   3
     #Function<
-    """ |> String.strip
+    """ |> String.trim
     expect = ~r/#{Regex.escape(expect1)}.*#{Regex.escape(expect2)}/
     assert_helper(expect, fn () ->
       sum = fn (x, y) -> x + y end
@@ -1139,7 +1139,7 @@ defmodule PowerAssertAssertionTest do
   end
 
   def assert_helper(expect, func) when is_binary(expect) do
-    expect = String.strip(expect)
+    expect = String.trim(expect)
     try do
       func.()
       assert false, "should be failed test #{expect}"
@@ -1149,7 +1149,7 @@ defmodule PowerAssertAssertionTest do
     end
   end
   def assert_helper(expects, func) when is_list(expects) do
-    [expect1, expect2] = Enum.map expects, &(String.strip(&1))
+    [expect1, expect2] = Enum.map expects, &(String.trim(&1))
     try do
       func.()
       assert false, "should be failed test #{expects}"
