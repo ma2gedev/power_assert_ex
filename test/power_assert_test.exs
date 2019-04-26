@@ -985,14 +985,21 @@ defmodule PowerAssertAssertionTest do
       Assertion.assert quote(@opts, do: :hoge) == :fuga
     end)
 
-    expect = """
+    expect_1_7_or_earlier = """
     quote() do
       unquote(x)
     end == :fuga
     |
     :hoge
     """
-    assert_helper(expect, fn () ->
+    expect_1_8_or_later = """
+    quote do
+      unquote(x)
+    end == :fuga
+    |
+    :hoge
+    """
+    assert_helper([expect_1_7_or_earlier, expect_1_8_or_later], fn () ->
       x = :hoge
       Assertion.assert quote(do: unquote(x)) == :fuga
     end)
