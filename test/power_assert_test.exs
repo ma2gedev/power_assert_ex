@@ -515,18 +515,6 @@ defmodule PowerAssertAssertionTest do
     end)
   end
 
-  test "range expr" do
-    expect = """
-    !Range.range?(range)
-    |      |      |
-    false  true   1..3
-    """
-    assert_helper(expect, fn () ->
-      range = 1..3
-      Assertion.assert !Range.range?(range)
-    end)
-  end
-
   test "imported function expr" do
     expect = """
     first([false, 2, 3])
