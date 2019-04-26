@@ -9,12 +9,13 @@ elixir:
   - 1.5.3
   - 1.6.6
   - 1.7.3
+  - 1.8.1
 otp_release:
   - 17.4
   - 18.3
   - 19.3
   - 20.3
-  - 21.0
+  - 21.3
 matrix:
   exclude:
     - elixir: 1.0.5
@@ -61,3 +62,9 @@ matrix:
       otp_release: 17.4
     - elixir: 1.7.3
       otp_release: 18.3
+    - elixir: 1.8.1
+      otp_release: 17.4
+    - elixir: 1.8.1
+      otp_release: 18.3
+    - elixir: 1.8.1
+      otp_release: 19.3
