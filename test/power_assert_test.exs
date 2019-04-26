@@ -9,7 +9,7 @@ defmodule PowerAssertTest do
     _one = "aiueo"
     two = 2
     assert [_one] = [two]
-    assert match?(x, "fuga")
+    assert match?(_x, "fuga")
     keywords = [value: [value: "hoge"]]
     assert keywords[:value][:value] == "hoge"
     assert fn(x) -> x == 1 end.(1)
@@ -263,13 +263,13 @@ defmodule PowerAssertAssertionTest do
   end
 
   test "&& expr" do
+    num = :rand.uniform(3) + 13 # avoid "this check/guard will always yield the same result"
     expect = """
     5 < num && num < 13
         |      |
-        16     16
+        #{num}     #{num}
     """
     assert_helper(expect, fn () ->
-      num = 16
       Assertion.assert 5 < num && num < 13
     end)
   end
@@ -437,7 +437,7 @@ defmodule PowerAssertAssertionTest do
     |    |
     |    false
     #Function<
-    """ |> String.strip
+    """ |> String.trim
     expect = ~r/#{Regex.escape(expect_str)}/
     assert_helper(expect, fn () ->
       func = fn () -> false end
@@ -452,7 +452,7 @@ defmodule PowerAssertAssertionTest do
     |    |false
     |    false
     #Function<
-    """ |> String.strip
+    """ |> String.trim
     expect = ~r/#{Regex.escape(expect)}/
     assert_helper(expect, fn () ->
       value = false
@@ -468,7 +468,7 @@ defmodule PowerAssertAssertionTest do
     |    |"hoge"  "fuga"
     |    false
     #Function<
-    """ |> String.strip
+    """ |> String.trim
     expect = ~r/#{Regex.escape(expect)}/
     assert_helper(expect, fn () ->
       value1 = "hoge"
@@ -485,12 +485,12 @@ defmodule PowerAssertAssertionTest do
     |   ||    |       |   |3      1
     |   ||    |       |   4
     |   |1    2       #Function<
-    """ |> String.strip
+    """ |> String.trim
     expect2 = """
     >
     |   3
     #Function<
-    """ |> String.strip
+    """ |> String.trim
     expect = ~r/#{Regex.escape(expect1)}.*#{Regex.escape(expect2)}/
     assert_helper(expect, fn () ->
       sum = fn (x, y) -> x + y end
@@ -512,18 +512,6 @@ defmodule PowerAssertAssertionTest do
       two = 2
       three = 3
       Assertion.assert one * two * three == 7
-    end)
-  end
-
-  test "range expr" do
-    expect = """
-    !Range.range?(range)
-    |      |      |
-    false  true   1..3
-    """
-    assert_helper(expect, fn () ->
-      range = 1..3
-      Assertion.assert !Range.range?(range)
     end)
   end
 
@@ -647,8 +635,9 @@ defmodule PowerAssertAssertionTest do
     true false
     """
     assert_helper(expect, fn () ->
-      x = true
-      y = false
+      # avoid "this check/guard will always yield the same result"
+      x = !!:rand.uniform(1)
+      y = !:rand.uniform(1)
       Assertion.assert x && y
     end)
 
@@ -913,13 +902,13 @@ defmodule PowerAssertAssertionTest do
 
   test "= expr not supported" do
     expect = """
-    List.first(x = array)
+    List.first(_x = array)
          |
          false
     """
     assert_helper(expect, fn () ->
       array = [false, true]
-      Assertion.assert List.first(x = array)
+      Assertion.assert List.first(_x = array)
     end)
   end
 
@@ -1139,7 +1128,7 @@ defmodule PowerAssertAssertionTest do
   end
 
   def assert_helper(expect, func) when is_binary(expect) do
-    expect = String.strip(expect)
+    expect = String.trim(expect)
     try do
       func.()
       assert false, "should be failed test #{expect}"
@@ -1149,7 +1138,7 @@ defmodule PowerAssertAssertionTest do
     end
   end
   def assert_helper(expects, func) when is_list(expects) do
-    [expect1, expect2] = Enum.map expects, &(String.strip(&1))
+    [expect1, expect2] = Enum.map expects, &(String.trim(&1))
     try do
       func.()
       assert false, "should be failed test #{expects}"

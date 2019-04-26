@@ -12,7 +12,7 @@ defmodule PowerAssertUseExUnitTest do
     _one = "aiueo"
     two = 2
     power_assert [_one] = [two]
-    power_assert match?(x, "fuga")
+    power_assert match?(_x, "fuga")
     keywords = [value: [value: "hoge"]]
     power_assert keywords[:value][:value] == "hoge"
     power_assert fn(x) -> x == 1 end.(1)
