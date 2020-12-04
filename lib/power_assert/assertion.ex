@@ -515,13 +515,13 @@ defmodule PowerAssert.Assertion do
     in_right = Map.split(right, Map.keys(left)) |> elem(1)
     str = "\n"
     str =
-      if Map.size(in_left) != 0 do
+      if map_size(in_left) != 0 do
         str <> "\nonly in lhs: " <> inspect(in_left)
       else
         str
       end
     str =
-      if Map.size(in_right) != 0 do
+      if map_size(in_right) != 0 do
         str <> "\nonly in rhs: " <> inspect(in_right)
       else
         str
