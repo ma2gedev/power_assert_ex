@@ -25,11 +25,10 @@ Enjoy :muscle: !
 
 Add Power Assert to your `mix.exs` dependencies:
 
-```
+```elixir
 defp deps do
   [{:power_assert, "~> 0.2.0", only: :test}]
 end
-
 ```
 
 and fetch `$ mix deps.get`.
@@ -123,7 +122,7 @@ See also: test/should/should_test.exs
 
 Only provide `assert` macro:
 
-```
+```elixir
 assert(expression, message \\ nil)
 ```
 
