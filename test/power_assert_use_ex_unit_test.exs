@@ -24,12 +24,12 @@ defmodule PowerAssertUseExUnitTest do
 
   test "raise" do
     try do
-      power_assert [1,2,3] |> Enum.take(1) |> Enum.empty?
+      power_assert [1,2,3] |> Enum.take(1) |> Enum.empty?()
       assert false, "should not reach"
     rescue
       error ->
         msg = """
-        [1, 2, 3] |> Enum.take(1) |> Enum.empty?
+        [1, 2, 3] |> Enum.take(1) |> Enum.empty?()
                           |               |
                           [1]             false
         """

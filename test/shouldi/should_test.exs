@@ -8,11 +8,11 @@ defmodule ShouldTest do
 
   should "use power assert inside should" do
     try do
-      assert [1,2,3] |> Enum.take(1) |> Enum.empty?
+      assert [1,2,3] |> Enum.take(1) |> Enum.empty?()
     rescue
       error ->
         msg = """
-        [1, 2, 3] |> Enum.take(1) |> Enum.empty?
+        [1, 2, 3] |> Enum.take(1) |> Enum.empty?()
                           |               |
                           [1]             false
         """
@@ -27,11 +27,11 @@ defmodule ShouldTest do
     should "use power assert", context do
       try do
         array = context.arr
-        assert array |> Enum.take(1) |> Enum.empty?
+        assert array |> Enum.take(1) |> Enum.empty?()
       rescue
         error ->
           msg = """
-          array |> Enum.take(1) |> Enum.empty?
+          array |> Enum.take(1) |> Enum.empty?()
           |             |               |
           [1, 2, 3]     [1]             false
           """

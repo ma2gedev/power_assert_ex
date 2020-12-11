@@ -21,12 +21,12 @@ defmodule PowerAssertTest do
 
   test "raise" do
     try do
-      assert [1,2,3] |> Enum.take(1) |> Enum.empty?
+      assert [1,2,3] |> Enum.take(1) |> Enum.empty?()
       ExUnit.Assertions.assert false, "should not reach"
     rescue
       error ->
         msg = """
-        [1, 2, 3] |> Enum.take(1) |> Enum.empty?
+        [1, 2, 3] |> Enum.take(1) |> Enum.empty?()
                           |               |
                           [1]             false
         """
@@ -47,12 +47,12 @@ defmodule PowerAssertAssertionTest do
 
   test "rendering" do
     expect = """
-    [1, 2, 3] |> Enum.take(1) |> Enum.empty?
+    [1, 2, 3] |> Enum.take(1) |> Enum.empty?()
                       |               |
                       [1]             false
     """
     assert_helper(expect, fn () ->
-      Assertion.assert [1,2,3] |> Enum.take(1) |> Enum.empty?
+      Assertion.assert [1,2,3] |> Enum.take(1) |> Enum.empty?()
     end)
   end
 

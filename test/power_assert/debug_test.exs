@@ -6,12 +6,12 @@ defmodule PowerAssert.DebugTest do
 
   test "puts_expr" do
     expect = """
-    [1, 2, 3] |> Enum.take(1) |> Enum.empty?
+    [1, 2, 3] |> Enum.take(1) |> Enum.empty?()
                       |               |
                       [1]             false
     """
     assert capture_io(fn ->
-      puts_expr [1,2,3] |> Enum.take(1) |> Enum.empty?
+      puts_expr [1,2,3] |> Enum.take(1) |> Enum.empty?()
     end) == expect
 
     expect = """

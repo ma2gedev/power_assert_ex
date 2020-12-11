@@ -21,11 +21,11 @@ defmodule MyTest do
   test "raise", context do
     assert context[:executed] == "setup func"
     try do
-      assert [1,2,3] |> Enum.take(1) |> Enum.empty?
+      assert [1,2,3] |> Enum.take(1) |> Enum.empty?()
     rescue
       error ->
         msg = """
-        [1, 2, 3] |> Enum.take(1) |> Enum.empty?
+        [1, 2, 3] |> Enum.take(1) |> Enum.empty?()
                           |               |
                           [1]             false
         """
@@ -67,11 +67,11 @@ defmodule MyTestUsing do
   test "raise", context do
     assert context[:executed] == "setup func"
     try do
-      assert [1,2,3] |> Enum.take(1) |> Enum.empty?
+      assert [1,2,3] |> Enum.take(1) |> Enum.empty?()
     rescue
       error ->
         msg = """
-        [1, 2, 3] |> Enum.take(1) |> Enum.empty?
+        [1, 2, 3] |> Enum.take(1) |> Enum.empty?()
                           |               |
                           [1]             false
         """
