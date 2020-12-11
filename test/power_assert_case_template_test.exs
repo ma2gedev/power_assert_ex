@@ -25,7 +25,7 @@ defmodule MyTest do
     rescue
       error ->
         msg = """
-        [1, 2, 3] |> Enum.take(1) |> Enum.empty?()
+        [1, 2, 3] |> Enum.take(1) |> Enum.empty?
                           |               |
                           [1]             false
         """
@@ -71,7 +71,7 @@ defmodule MyTestUsing do
     rescue
       error ->
         msg = """
-        [1, 2, 3] |> Enum.take(1) |> Enum.empty?()
+        [1, 2, 3] |> Enum.take(1) |> Enum.empty?
                           |               |
                           [1]             false
         """

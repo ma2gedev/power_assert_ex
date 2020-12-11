@@ -6,7 +6,7 @@ defmodule PowerAssert.DebugTest do
 
   test "puts_expr" do
     expect = """
-    [1, 2, 3] |> Enum.take(1) |> Enum.empty?()
+    [1, 2, 3] |> Enum.take(1) |> Enum.empty?
                       |               |
                       [1]             false
     """

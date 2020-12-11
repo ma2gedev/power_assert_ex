@@ -26,7 +26,7 @@ defmodule PowerAssertTest do
     rescue
       error ->
         msg = """
-        [1, 2, 3] |> Enum.take(1) |> Enum.empty?()
+        [1, 2, 3] |> Enum.take(1) |> Enum.empty?
                           |               |
                           [1]             false
         """
@@ -47,7 +47,7 @@ defmodule PowerAssertAssertionTest do
 
   test "rendering" do
     expect = """
-    [1, 2, 3] |> Enum.take(1) |> Enum.empty?()
+    [1, 2, 3] |> Enum.take(1) |> Enum.empty?
                       |               |
                       [1]             false
     """
