@@ -938,15 +938,7 @@ defmodule PowerAssertAssertionTest do
   end
 
   test "sigil expr not supported" do
-    elixir_1_0 = """
-    sigil_w(<<"hoge fuga ", Kernel.to_string(x) :: binary>>, []) == y
-                                                                    |
-                                                                    ["hoge", "fuga"]
-    
-    only in lhs: ["nya"]
-    only in rhs: []
-    """
-    elixir_1_1 = """
+    elixir_1_9_or_earlier = """
     ~w"hoge fuga \#{x}" == y
                           |
                           ["hoge", "fuga"]
@@ -954,7 +946,15 @@ defmodule PowerAssertAssertionTest do
     only in lhs: ["nya"]
     only in rhs: []
     """
-    assert_helper([elixir_1_0, elixir_1_1], fn () ->
+    elixir_1_10_or_later = """
+    ~w(hoge fuga \#{x}) == y
+                          |
+                          ["hoge", "fuga"]
+    
+    only in lhs: ["nya"]
+    only in rhs: []
+    """
+    assert_helper([elixir_1_9_or_earlier, elixir_1_10_or_later], fn () ->
       x = "nya"
       y = ["hoge", "fuga"]
       Assertion.assert ~w(hoge fuga #{x}) == y
