@@ -116,7 +116,7 @@ defmodule PowerAssertAssertionTest do
                     false
     """
     assert_helper(expect, fn () ->
-      Assertion.assert [false] |> List.first, "failed with message"
+      Assertion.assert [false] |> List.first(), "failed with message"
     end)
   end
 
@@ -258,7 +258,7 @@ defmodule PowerAssertAssertionTest do
     assert_helper(expect, fn() ->
       ary1 = ["hoge", "fuga"]
       ary2 = ["hoge"]
-      Assertion.assert ary1 |> Enum.count == ary2 |> Enum.count
+      Assertion.assert ary1 |> Enum.count() == ary2 |> Enum.count()
     end)
   end
 
@@ -307,7 +307,7 @@ defmodule PowerAssertAssertionTest do
     """
     assert_helper(expect, fn () ->
       map = %{value: false}
-      Assertion.assert map.value
+      Assertion.assert map.value()
     end)
 
     expect = """
@@ -334,7 +334,7 @@ defmodule PowerAssertAssertionTest do
     """
     assert_helper(expect, fn () ->
       map = %{value: %{value: false}}
-      Assertion.assert map.value.value
+      Assertion.assert map.value().value()
     end)
   end
 
@@ -884,7 +884,7 @@ defmodule PowerAssertAssertionTest do
     """
     assert_helper(expect, fn () ->
       array = [2, 3]
-      Assertion.assert Enum.map(array, fn(x) -> x == 1 end) |> List.first
+      Assertion.assert Enum.map(array, fn(x) -> x == 1 end) |> List.first()
     end)
 
     # partials
@@ -896,7 +896,7 @@ defmodule PowerAssertAssertionTest do
     """
     assert_helper(expect, fn () ->
       array = [2, 3]
-      Assertion.assert Enum.map(array, &(&1 == 1)) |> List.first
+      Assertion.assert Enum.map(array, &(&1 == 1)) |> List.first()
     end)
   end
 
@@ -1033,7 +1033,7 @@ defmodule PowerAssertAssertionTest do
     """
     assert_helper([elixir_less_than_1_2, elixir_1_2_or_more], fn () ->
       users = %{"john" => %{age: 27}}
-      Assertion.assert get_and_update_in(users["john"].age, &{&1, &1 + 1}) == {27, %{"john" => %{age: 27}}}
+      Assertion.assert get_and_update_in(users["john"].age(), &{&1, &1 + 1}) == {27, %{"john" => %{age: 27}}}
     end)
   end
 
