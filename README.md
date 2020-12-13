@@ -1,6 +1,6 @@
 # Power Assert
 
-[![hex.pm version](https://img.shields.io/hexpm/v/power_assert.svg)](https://hex.pm/packages/power_assert) [![hex.pm daily downloads](https://img.shields.io/hexpm/dd/power_assert.svg)](https://hex.pm/packages/power_assert) [![hex.pm weekly downloads](https://img.shields.io/hexpm/dw/power_assert.svg)](https://hex.pm/packages/power_assert) [![hex.pm downloads](https://img.shields.io/hexpm/dt/power_assert.svg)](https://hex.pm/packages/power_assert) [![Build Status](https://travis-ci.org/ma2gedev/power_assert_ex.svg?branch=master)](https://travis-ci.org/ma2gedev/power_assert_ex) [![License](https://img.shields.io/hexpm/l/power_assert.svg)](http://www.apache.org/licenses/LICENSE-2.0)
+[![hex.pm version](https://img.shields.io/hexpm/v/power_assert.svg)](https://hex.pm/packages/power_assert) [![hex.pm daily downloads](https://img.shields.io/hexpm/dd/power_assert.svg)](https://hex.pm/packages/power_assert) [![hex.pm weekly downloads](https://img.shields.io/hexpm/dw/power_assert.svg)](https://hex.pm/packages/power_assert) [![hex.pm downloads](https://img.shields.io/hexpm/dt/power_assert.svg)](https://hex.pm/packages/power_assert) [![Build Status](https://github.com/ma2gedev/power_assert_ex/workflows/Elixir%20CI/badge.svg?branch=master)](https://github.com/ma2gedev/power_assert_ex/actions?query=workflow%3A%22Elixir+CI%22) [![License](https://img.shields.io/hexpm/l/power_assert.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
 Power Assert makes test results easier to understand, without changing your ExUnit test code.
 
