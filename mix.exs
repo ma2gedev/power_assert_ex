@@ -4,7 +4,7 @@ defmodule PowerAssert.Mixfile do
   def project do
     [app: :power_assert,
      version: "0.2.1",
-     elixir: "~> 1.4",
+     elixir: "~> 1.6",
      description: "Power Assert in Elixir. Shows evaluation results each expression.",
      package: [
        maintainers: ["Takayuki Matsubara"],
