@@ -893,17 +893,8 @@ defmodule PowerAssertAssertionTest do
     end)
   end
 
-  test ":: expr not supported" do
-    elixir_1_0 = """
-    "hoge" == <<"f", Kernel.to_string(x) :: binary, "a">>
-              |
-              "fuga"
-
-    difference:
-    hoge
-    fuga
-    """
-    elixir_1_1 = """
+  test "string interpolation not supported" do
+    expect = """
     "hoge" == "f\#{x}a"
               |
               "fuga"
@@ -912,9 +903,25 @@ defmodule PowerAssertAssertionTest do
     hoge
     fuga
     """
-    assert_helper([elixir_1_0, elixir_1_1], fn () ->
+    assert_helper(expect, fn () ->
       x = "ug"
       Assertion.assert "hoge" == "f#{x}a"
+    end)
+  end
+
+  test ":: expr not supported" do
+    expect = """
+    "hoge" == <<"f", Kernel.to_string(x)::binary, "a">>
+              |
+              "fuga"
+
+    difference:
+    hoge
+    fuga
+    """
+    assert_helper(expect, fn () ->
+      x = "ug"
+      Assertion.assert "hoge" == <<"f", Kernel.to_string(x)::binary, "a">>
     end)
   end
 
