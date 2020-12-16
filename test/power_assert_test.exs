@@ -778,19 +778,13 @@ defmodule PowerAssertAssertionTest do
       Assertion.assert -x == +y
     end)
 
-    expect_1_5_or_earlier = """
-    not x
-    |   |
-    |   true
-    false
-    """
-    expect_1_6_or_later = """
+    expect = """
     not(x)
     |   |
     |   true
     false
     """
-    assert_helper([expect_1_5_or_earlier, expect_1_6_or_later], fn () ->
+    assert_helper(expect, fn () ->
       x = true
       Assertion.assert not x
     end)
@@ -852,26 +846,13 @@ defmodule PowerAssertAssertionTest do
   end
 
   test "fn expr not supported" do
-    # could not
-    # expect = """
-    # (fn x -> x == 1 end).(x)
-    #                      ||
-    #                      |2
-    #                      false
-    # """
-    expect_1_3_or_earlier = """
-    fn x -> x == 1 end.(y)
-                       ||
-                       |2
-                       false
-    """
-    expect_1_4_or_later = """
+    expect = """
     (fn x -> x == 1 end).(y)
                          ||
                          |2
                          false
     """
-    assert_helper([expect_1_3_or_earlier, expect_1_4_or_later], fn () ->
+    assert_helper(expect, fn () ->
       y = 2
       Assertion.assert fn(x) -> x == 1 end.(y)
     end)
@@ -912,17 +893,8 @@ defmodule PowerAssertAssertionTest do
     end)
   end
 
-  test ":: expr not supported" do
-    elixir_1_0 = """
-    "hoge" == <<"f", Kernel.to_string(x) :: binary, "a">>
-              |
-              "fuga"
-
-    difference:
-    hoge
-    fuga
-    """
-    elixir_1_1 = """
+  test "string interpolation not supported" do
+    expect = """
     "hoge" == "f\#{x}a"
               |
               "fuga"
@@ -931,9 +903,25 @@ defmodule PowerAssertAssertionTest do
     hoge
     fuga
     """
-    assert_helper([elixir_1_0, elixir_1_1], fn () ->
+    assert_helper(expect, fn () ->
       x = "ug"
       Assertion.assert "hoge" == "f#{x}a"
+    end)
+  end
+
+  test ":: expr not supported" do
+    expect = """
+    "hoge" == <<"f", Kernel.to_string(x)::binary, "a">>
+              |
+              "fuga"
+
+    difference:
+    hoge
+    fuga
+    """
+    assert_helper(expect, fn () ->
+      x = "ug"
+      Assertion.assert "hoge" == <<"f", Kernel.to_string(x)::binary, "a">>
     end)
   end
 
@@ -1021,17 +1009,12 @@ defmodule PowerAssertAssertionTest do
       Assertion.assert update_in(users["john"][:age], &(&1 + 1)) == %{"john" => %{age: 27}}
     end)
 
-    elixir_less_than_1_2 = """
-    get_and_update_in(users["john"].age(), &{&1, &1 + 1}) == {27, %{"john" => %{age: 27}}}
-    |
-    {27, %{"john" => %{age: 28}}}
-    """
-    elixir_1_2_or_more = """
+    expect = """
     get_and_update_in(users["john"].age(), &({&1, &1 + 1})) == {27, %{"john" => %{age: 27}}}
     |
     {27, %{"john" => %{age: 28}}}
     """
-    assert_helper([elixir_less_than_1_2, elixir_1_2_or_more], fn () ->
+    assert_helper(expect, fn () ->
       users = %{"john" => %{age: 27}}
       Assertion.assert get_and_update_in(users["john"].age(), &{&1, &1 + 1}) == {27, %{"john" => %{age: 27}}}
     end)
