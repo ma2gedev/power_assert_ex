@@ -130,7 +130,7 @@ defmodule PowerAssert.Assertion do
   @doc false
   def inject_store_code(ast, expr, default_index \\ 0) do
     positions = detect_position(ast, expr, default_index)
-    {injected_ast, _} = PowerAssert.Ast.traverse(ast, %Injector{positions: Enum.reverse(positions)}, &pre_catcher/2, &catcher/2)
+    {injected_ast, _} = Macro.traverse(ast, %Injector{positions: Enum.reverse(positions)}, &pre_catcher/2, &catcher/2)
     # IO.inspect injected_ast
     # IO.inspect Macro.to_string injected_ast
     quote do
@@ -144,7 +144,7 @@ defmodule PowerAssert.Assertion do
   ## detect positions
   defp detect_position(ast, expr, default_index) do
     {_ast, %Detector{positions: positions}} =
-      PowerAssert.Ast.traverse(ast, %Detector{code: expr}, &pre_collect_position/2, &collect_position/2)
+      Macro.traverse(ast, %Detector{code: expr}, &pre_collect_position/2, &collect_position/2)
     positions =
       if default_index != 0 do
         Enum.map(positions, fn([pos, code]) -> [default_index + pos, code] end)
