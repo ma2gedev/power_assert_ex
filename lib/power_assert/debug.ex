@@ -22,7 +22,11 @@ defmodule PowerAssert.Debug do
 
     quote do
       unquote(injected_ast)
-      IO.puts PowerAssert.Assertion.render_values(unquote(code), var!(values, PowerAssert.Assertion))
+
+      IO.puts(
+        PowerAssert.Assertion.render_values(unquote(code), var!(values, PowerAssert.Assertion))
+      )
+
       var!(result, PowerAssert.Assertion)
     end
   end
