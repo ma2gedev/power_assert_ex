@@ -333,24 +333,22 @@ defmodule PowerAssertAssertionTest do
   end
 
   test "nested map expr" do
-    expect = case Version.compare(System.version(), "1.10.0") do
-      :lt ->
-        """
-        map.value().value()
-        |   |       |
-        |   |       false
-        |   %{value: false}
-        %{value: %{value: false}}
-        """
-      _ ->
-        """
-        map.value.value
-        |   |     |
-        |   |     false
-        |   %{value: false}
-        %{value: %{value: false}}
-        """
-    end
+    expect = expectation_by_version("1.10.0", %{
+      earlier: """
+               map.value().value()
+               |   |       |
+               |   |       false
+               |   %{value: false}
+               %{value: %{value: false}}
+               """,
+      later:   """
+               map.value.value
+               |   |     |
+               |   |     false
+               |   %{value: false}
+               %{value: %{value: false}}
+               """
+    })
     assert_helper(expect, fn () ->
       map = %{value: %{value: false}}
       Assertion.assert map.value.value
@@ -945,23 +943,25 @@ defmodule PowerAssertAssertionTest do
   end
 
   test "sigil expr not supported" do
-    elixir_1_9_or_earlier = """
-    ~w"hoge fuga \#{x}" == y
-                          |
-                          ["hoge", "fuga"]
-    
-    only in lhs: ["nya"]
-    only in rhs: []
-    """
-    elixir_1_10_or_later = """
-    ~w(hoge fuga \#{x}) == y
-                          |
-                          ["hoge", "fuga"]
-    
-    only in lhs: ["nya"]
-    only in rhs: []
-    """
-    assert_helper([elixir_1_9_or_earlier, elixir_1_10_or_later], fn () ->
+    expect = expectation_by_version("1.10.0", %{
+      earlier: """
+               ~w"hoge fuga \#{x}" == y
+                                     |
+                                     ["hoge", "fuga"]
+
+               only in lhs: ["nya"]
+               only in rhs: []
+               """,
+      later:   """
+               ~w(hoge fuga \#{x}) == y
+                                     |
+                                     ["hoge", "fuga"]
+
+               only in lhs: ["nya"]
+               only in rhs: []
+               """
+    })
+    assert_helper(expect, fn () ->
       x = "nya"
       y = ["hoge", "fuga"]
       Assertion.assert ~w(hoge fuga #{x}) == y
@@ -981,21 +981,23 @@ defmodule PowerAssertAssertionTest do
       Assertion.assert quote(@opts, do: :hoge) == :fuga
     end)
 
-    expect_1_7_or_earlier = """
-    quote() do
-      unquote(x)
-    end == :fuga
-    |
-    :hoge
-    """
-    expect_1_8_or_later = """
-    quote do
-      unquote(x)
-    end == :fuga
-    |
-    :hoge
-    """
-    assert_helper([expect_1_7_or_earlier, expect_1_8_or_later], fn () ->
+    expect = expectation_by_version("1.8.0", %{
+      earlier: """
+               quote() do
+                 unquote(x)
+               end == :fuga
+               |
+               :hoge
+               """,
+      later:   """
+               quote do
+                 unquote(x)
+               end == :fuga
+               |
+               :hoge
+               """
+    })
+    assert_helper(expect, fn () ->
       x = :hoge
       Assertion.assert quote(do: unquote(x)) == :fuga
     end)
