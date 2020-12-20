@@ -1141,16 +1141,6 @@ defmodule PowerAssertAssertionTest do
         assert expect == error.message
     end
   end
-  def assert_helper(expects, func) when is_list(expects) do
-    [expect1, expect2] = Enum.map expects, &(String.trim(&1))
-    try do
-      func.()
-      assert false, "should be failed test #{expects}"
-    rescue
-      error ->
-        assert (expect1 == error.message) || (expect2 == error.message)
-    end
-  end
   def assert_helper(expect, func) do
     try do
       func.()
