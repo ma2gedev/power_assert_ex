@@ -299,15 +299,23 @@ defmodule PowerAssertAssertionTest do
   end
 
   test "map expr" do
-    expect = """
-    map.value()
-    |   |
-    |   false
-    %{value: false}
-    """
+    expect = expectation_by_version("1.10.0", %{
+      earlier: """
+               map.value()
+               |   |
+               |   false
+               %{value: false}
+               """,
+      later:   """
+               map.value
+               |   |
+               |   false
+               %{value: false}
+               """
+    })
     assert_helper(expect, fn () ->
       map = %{value: false}
-      Assertion.assert map.value()
+      Assertion.assert map.value
     end)
 
     expect = """
@@ -325,16 +333,25 @@ defmodule PowerAssertAssertionTest do
   end
 
   test "nested map expr" do
-    expect = """
-    map.value().value()
-    |   |       |
-    |   |       false
-    |   %{value: false}
-    %{value: %{value: false}}
-    """
+    expect = expectation_by_version("1.10.0", %{
+      earlier: """
+               map.value().value()
+               |   |       |
+               |   |       false
+               |   %{value: false}
+               %{value: %{value: false}}
+               """,
+      later:   """
+               map.value.value
+               |   |     |
+               |   |     false
+               |   %{value: false}
+               %{value: %{value: false}}
+               """
+    })
     assert_helper(expect, fn () ->
       map = %{value: %{value: false}}
-      Assertion.assert map.value().value()
+      Assertion.assert map.value.value
     end)
   end
 
@@ -926,23 +943,25 @@ defmodule PowerAssertAssertionTest do
   end
 
   test "sigil expr not supported" do
-    elixir_1_9_or_earlier = """
-    ~w"hoge fuga \#{x}" == y
-                          |
-                          ["hoge", "fuga"]
-    
-    only in lhs: ["nya"]
-    only in rhs: []
-    """
-    elixir_1_10_or_later = """
-    ~w(hoge fuga \#{x}) == y
-                          |
-                          ["hoge", "fuga"]
-    
-    only in lhs: ["nya"]
-    only in rhs: []
-    """
-    assert_helper([elixir_1_9_or_earlier, elixir_1_10_or_later], fn () ->
+    expect = expectation_by_version("1.10.0", %{
+      earlier: """
+               ~w"hoge fuga \#{x}" == y
+                                     |
+                                     ["hoge", "fuga"]
+
+               only in lhs: ["nya"]
+               only in rhs: []
+               """,
+      later:   """
+               ~w(hoge fuga \#{x}) == y
+                                     |
+                                     ["hoge", "fuga"]
+
+               only in lhs: ["nya"]
+               only in rhs: []
+               """
+    })
+    assert_helper(expect, fn () ->
       x = "nya"
       y = ["hoge", "fuga"]
       Assertion.assert ~w(hoge fuga #{x}) == y
@@ -962,21 +981,23 @@ defmodule PowerAssertAssertionTest do
       Assertion.assert quote(@opts, do: :hoge) == :fuga
     end)
 
-    expect_1_7_or_earlier = """
-    quote() do
-      unquote(x)
-    end == :fuga
-    |
-    :hoge
-    """
-    expect_1_8_or_later = """
-    quote do
-      unquote(x)
-    end == :fuga
-    |
-    :hoge
-    """
-    assert_helper([expect_1_7_or_earlier, expect_1_8_or_later], fn () ->
+    expect = expectation_by_version("1.8.0", %{
+      earlier: """
+               quote() do
+                 unquote(x)
+               end == :fuga
+               |
+               :hoge
+               """,
+      later:   """
+               quote do
+                 unquote(x)
+               end == :fuga
+               |
+               :hoge
+               """
+    })
+    assert_helper(expect, fn () ->
       x = :hoge
       Assertion.assert quote(do: unquote(x)) == :fuga
     end)
@@ -1120,16 +1141,6 @@ defmodule PowerAssertAssertionTest do
         assert expect == error.message
     end
   end
-  def assert_helper(expects, func) when is_list(expects) do
-    [expect1, expect2] = Enum.map expects, &(String.trim(&1))
-    try do
-      func.()
-      assert false, "should be failed test #{expects}"
-    rescue
-      error ->
-        assert (expect1 == error.message) || (expect2 == error.message)
-    end
-  end
   def assert_helper(expect, func) do
     try do
       func.()
@@ -1139,4 +1150,12 @@ defmodule PowerAssertAssertionTest do
         assert Regex.match?(expect, error.message)
     end
   end
+
+  def expectation_by_version(version, %{earlier: expect_earlier, later: expect_later}) do
+    case Version.compare(System.version(), version) do
+      :lt -> expect_earlier
+      _ -> expect_later
+    end
+  end
+
 end
