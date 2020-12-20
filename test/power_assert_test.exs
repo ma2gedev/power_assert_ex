@@ -299,12 +299,22 @@ defmodule PowerAssertAssertionTest do
   end
 
   test "map expr" do
-    expect = """
-    map.value
-    |   |
-    |   false
-    %{value: false}
-    """
+    expect = case Version.compare(System.version(), "1.10.0") do
+      :lt ->
+        """
+        map.value()
+        |   |
+        |   false
+        %{value: false}
+        """
+      _ ->
+        """
+        map.value
+        |   |
+        |   false
+        %{value: false}
+        """
+    end
     assert_helper(expect, fn () ->
       map = %{value: false}
       Assertion.assert map.value
@@ -325,13 +335,24 @@ defmodule PowerAssertAssertionTest do
   end
 
   test "nested map expr" do
-    expect = """
-    map.value.value
-    |   |     |
-    |   |     false
-    |   %{value: false}
-    %{value: %{value: false}}
-    """
+    expect = case Version.compare(System.version(), "1.10.0") do
+      :lt ->
+        """
+        map.value().value()
+        |   |       |
+        |   |       false
+        |   %{value: false}
+        %{value: %{value: false}}
+        """
+      _ ->
+        """
+        map.value.value
+        |   |     |
+        |   |     false
+        |   %{value: false}
+        %{value: %{value: false}}
+        """
+    end
     assert_helper(expect, fn () ->
       map = %{value: %{value: false}}
       Assertion.assert map.value.value
