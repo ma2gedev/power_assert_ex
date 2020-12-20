@@ -299,7 +299,7 @@ defmodule PowerAssertAssertionTest do
   end
 
   test "map expr" do
-    expect = current_version_expectation("1.10.0", %{
+    expect = expectation_by_version("1.10.0", %{
       before: """
               map.value()
               |   |
@@ -1159,7 +1159,7 @@ defmodule PowerAssertAssertionTest do
     end
   end
 
-  def current_version_expectation(version, %{before: expect_before, after: expect_after}) do
+  def expectation_by_version(version, %{before: expect_before, after: expect_after}) do
     case Version.compare(System.version(), version) do
       :lt -> expect_before
       _ -> expect_after
