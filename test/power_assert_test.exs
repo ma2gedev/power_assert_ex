@@ -300,18 +300,18 @@ defmodule PowerAssertAssertionTest do
 
   test "map expr" do
     expect = expectation_by_version("1.10.0", %{
-      before: """
-              map.value()
-              |   |
-              |   false
-              %{value: false}
-              """,
-      after:  """
-              map.value
-              |   |
-              |   false
-              %{value: false}
-              """
+      earlier: """
+               map.value()
+               |   |
+               |   false
+               %{value: false}
+               """,
+      later:   """
+               map.value
+               |   |
+               |   false
+               %{value: false}
+               """
     })
     assert_helper(expect, fn () ->
       map = %{value: false}
@@ -1159,10 +1159,10 @@ defmodule PowerAssertAssertionTest do
     end
   end
 
-  def expectation_by_version(version, %{before: expect_before, after: expect_after}) do
+  def expectation_by_version(version, %{earlier: expect_earlier, later: expect_later}) do
     case Version.compare(System.version(), version) do
-      :lt -> expect_before
-      _ -> expect_after
+      :lt -> expect_earlier
+      _ -> expect_later
     end
   end
 
