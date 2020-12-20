@@ -300,14 +300,14 @@ defmodule PowerAssertAssertionTest do
 
   test "map expr" do
     expect = """
-    map.value()
+    map.value
     |   |
     |   false
     %{value: false}
     """
     assert_helper(expect, fn () ->
       map = %{value: false}
-      Assertion.assert map.value()
+      Assertion.assert map.value
     end)
 
     expect = """
@@ -326,15 +326,15 @@ defmodule PowerAssertAssertionTest do
 
   test "nested map expr" do
     expect = """
-    map.value().value()
-    |   |       |
-    |   |       false
+    map.value.value
+    |   |     |
+    |   |     false
     |   %{value: false}
     %{value: %{value: false}}
     """
     assert_helper(expect, fn () ->
       map = %{value: %{value: false}}
-      Assertion.assert map.value().value()
+      Assertion.assert map.value.value
     end)
   end
 
