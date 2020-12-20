@@ -299,22 +299,20 @@ defmodule PowerAssertAssertionTest do
   end
 
   test "map expr" do
-    expect = case Version.compare(System.version(), "1.10.0") do
-      :lt ->
-        """
-        map.value()
-        |   |
-        |   false
-        %{value: false}
-        """
-      _ ->
-        """
-        map.value
-        |   |
-        |   false
-        %{value: false}
-        """
-    end
+    expect = current_version_expectation("1.10.0", %{
+      before: """
+              map.value()
+              |   |
+              |   false
+              %{value: false}
+              """,
+      after:  """
+              map.value
+              |   |
+              |   false
+              %{value: false}
+              """
+    })
     assert_helper(expect, fn () ->
       map = %{value: false}
       Assertion.assert map.value
@@ -1160,4 +1158,12 @@ defmodule PowerAssertAssertionTest do
         assert Regex.match?(expect, error.message)
     end
   end
+
+  def current_version_expectation(version, %{before: expect_before, after: expect_after}) do
+    case Version.compare(System.version(), version) do
+      :lt -> expect_before
+      _ -> expect_after
+    end
+  end
+
 end
