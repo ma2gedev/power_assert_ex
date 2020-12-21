@@ -438,13 +438,7 @@ defmodule PowerAssert.Assertion do
   end
 
   defp function_expression({:fn, _, _args} = left_ast) do
-    case Version.compare(System.version(), "1.4.0") do
-      :lt ->
-        Macro.to_string(left_ast)
-
-      _ ->
-        "(#{Macro.to_string(left_ast)})"
-    end
+    "(#{Macro.to_string(left_ast)})"
   end
 
   defp function_expression(left_ast) do
