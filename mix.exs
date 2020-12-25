@@ -1,4 +1,4 @@
-defmodule PowerAssert.Mixfile do
+defmodule PowerAssert.MixProject do
   use Mix.Project
 
   def project do
