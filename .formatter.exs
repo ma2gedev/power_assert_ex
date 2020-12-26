@@ -1,5 +1,6 @@
 [
   inputs: [
-    "lib/**/*.{ex,exs}"
+    "{mix,.formatter}.exs",
+    "{config,lib}/**/*.{ex,exs}"
   ]
 ]
