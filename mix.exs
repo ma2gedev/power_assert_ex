@@ -34,7 +34,6 @@ defmodule PowerAssert.Mixfile do
   # Type `mix help deps` for more examples and options
   defp deps do
     [{:ex_spec, ">= 2.0.0", only: :test},
-     {:ex_doc, ">= 0.0.0", only: :dev},
-     {:shouldi, only: :test}]
+     {:ex_doc, ">= 0.0.0", only: :dev}]
   end
 end

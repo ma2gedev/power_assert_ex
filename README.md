@@ -80,7 +80,7 @@ end
 $ git grep -l 'use ExUnit\.Case' | xargs sed -i.bak -e 's/use ExUnit\.Case/use PowerAssert/g'
 ```
 
-## How to use with other framework depending on ExUnit such as ExSpec or ShouldI
+## How to use with other framework depending on ExUnit such as ExSpec
 
 ### ExSpec
 
@@ -101,22 +101,6 @@ end
 
 See also: test/ex_spec/ex_spec_test.exs
 
-### ShouldI
-
-Append `use PowerAssert` after `use ShouldI`:
-
-```elixir
-defmodule ShouldTest do
-  use ShouldI
-  use PowerAssert   # <-- append
-
-  should "inside should" do
-    assert something == "hoge"
-  end
-end
-```
-
-See also: test/should/should_test.exs
 
 ## API
 
