@@ -24,7 +24,7 @@ defmodule PowerAssert.Debug do
       unquote(injected_ast)
 
       IO.puts(
-        PowerAssert.Assertion.render_values(unquote(code), var!(values, PowerAssert.Assertion))
+        PowerAssert.Renderer.render_values(unquote(code), var!(values, PowerAssert.Assertion))
       )
 
       var!(result, PowerAssert.Assertion)
