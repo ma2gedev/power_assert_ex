@@ -4,14 +4,14 @@ defmodule PowerAssert.Renderer do
   """
 
   @doc false
-  def render_values(code, values, left \\ nil, right \\ nil)
+  def render_values(code_ast, values, left \\ nil, right \\ nil)
 
-  def render_values(code, [], left, right) do
-    Macro.to_string(code) <> extra_information(left, right)
+  def render_values(code_ast, [], left, right) do
+    Macro.to_string(code_ast) <> extra_information(left, right)
   end
 
-  def render_values(code, values, left, right) do
-    code_str = Macro.to_string(code)
+  def render_values(code_ast, values, left, right) do
+    code_str = Macro.to_string(code_ast)
     values = Enum.sort(values, fn [x_pos, _], [y_pos, _] -> x_pos > y_pos end)
     [max_pos, _] = Enum.max_by(values, fn [pos, _] -> pos end)
     first_line = String.duplicate(" ", max_pos + 1) |> replace_with_bar(values)
