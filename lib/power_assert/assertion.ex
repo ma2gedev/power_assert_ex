@@ -42,7 +42,7 @@ defmodule PowerAssert.Assertion do
           if right do
             right
           else
-            message = PowerAssert.Renderer.render_values(expr, position_and_values)
+            message = PowerAssert.Renderer.render(expr, position_and_values)
             unquote(message_ast)
 
             raise ExUnit.AssertionError,
@@ -63,7 +63,7 @@ defmodule PowerAssert.Assertion do
             unquote(vars)
 
           _ ->
-            message = PowerAssert.Renderer.render_values(expr, position_and_values)
+            message = PowerAssert.Renderer.render(expr, position_and_values)
             unquote(message_ast)
 
             raise ExUnit.AssertionError,
@@ -91,7 +91,7 @@ defmodule PowerAssert.Assertion do
       # wrap result for avoid warning: this check/guard will always yield the same result
       unless left == (fn x -> x end).(result) do
         message =
-          PowerAssert.Renderer.render_values(unquote(code), left_position_and_values ++ position_and_values, left, result)
+          PowerAssert.Renderer.render(unquote(code), left_position_and_values ++ position_and_values, left, result)
 
         unquote(message_ast)
 
@@ -113,7 +113,7 @@ defmodule PowerAssert.Assertion do
       unquote(injected_ast)
 
       unless result do
-        message = PowerAssert.Renderer.render_values(unquote(code), position_and_values)
+        message = PowerAssert.Renderer.render(unquote(code), position_and_values)
         unquote(message_ast)
 
         raise ExUnit.AssertionError,

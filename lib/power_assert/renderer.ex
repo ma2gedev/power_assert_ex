@@ -6,13 +6,13 @@ defmodule PowerAssert.Renderer do
   @doc """
   renders test result
   """
-  def render_values(code_ast, position_and_values, lhs_result \\ nil, rhs_result \\ nil)
+  def render(code_ast, position_and_values, lhs_result \\ nil, rhs_result \\ nil)
 
-  def render_values(code_ast, [], lhs_result, rhs_result) do
+  def render(code_ast, [], lhs_result, rhs_result) do
     Macro.to_string(code_ast) <> extra_information(lhs_result, rhs_result)
   end
 
-  def render_values(code_ast, position_and_values, lhs_result, rhs_result) do
+  def render(code_ast, position_and_values, lhs_result, rhs_result) do
     code_str = Macro.to_string(code_ast)
     position_and_values = Enum.sort(position_and_values, fn %PositionAndValue{position: x_pos}, %PositionAndValue{position: y_pos} -> x_pos > y_pos end)
     %PositionAndValue{position: max_pos} = Enum.max_by(position_and_values, fn %PositionAndValue{position: pos} -> pos end)
