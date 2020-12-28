@@ -14,8 +14,16 @@ defmodule PowerAssert.Renderer do
 
   def render(code_ast, position_and_values, lhs_result, rhs_result) do
     code_str = Macro.to_string(code_ast)
-    position_and_values = Enum.sort(position_and_values, fn %PositionAndValue{position: x_pos}, %PositionAndValue{position: y_pos} -> x_pos > y_pos end)
-    %PositionAndValue{position: max_pos} = Enum.max_by(position_and_values, fn %PositionAndValue{position: pos} -> pos end)
+
+    position_and_values =
+      Enum.sort(position_and_values, fn %PositionAndValue{position: x_pos},
+                                        %PositionAndValue{position: y_pos} ->
+        x_pos > y_pos
+      end)
+
+    %PositionAndValue{position: max_pos} =
+      Enum.max_by(position_and_values, fn %PositionAndValue{position: pos} -> pos end)
+
     first_line = String.duplicate(" ", max_pos + 1) |> replace_with_bar(position_and_values)
     lines = make_lines([], Enum.count(position_and_values), position_and_values, -1)
     Enum.join([code_str, first_line] ++ lines, "\n") <> extra_information(lhs_result, rhs_result)
@@ -54,7 +62,8 @@ defmodule PowerAssert.Renderer do
     end)
   end
 
-  defp extra_information(lhs_result, rhs_result) when is_list(lhs_result) and is_list(rhs_result) do
+  defp extra_information(lhs_result, rhs_result)
+       when is_list(lhs_result) and is_list(rhs_result) do
     [
       "\n\nonly in lhs: " <> ((lhs_result -- rhs_result) |> inspect),
       "only in rhs: " <> ((rhs_result -- lhs_result) |> inspect)
@@ -120,6 +129,4 @@ defmodule PowerAssert.Renderer do
       end
     end)
   end
-
-
 end

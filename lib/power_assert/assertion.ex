@@ -91,7 +91,12 @@ defmodule PowerAssert.Assertion do
       # wrap result for avoid warning: this check/guard will always yield the same result
       unless left == (fn x -> x end).(result) do
         message =
-          PowerAssert.Renderer.render(unquote(code), left_position_and_values ++ position_and_values, left, result)
+          PowerAssert.Renderer.render(
+            unquote(code),
+            left_position_and_values ++ position_and_values,
+            left,
+            result
+          )
 
         unquote(message_ast)
 
@@ -488,7 +493,12 @@ defmodule PowerAssert.Assertion do
   defp store_value_ast(ast, pos) do
     quote do
       v = unquote(ast)
-      Agent.update(buffer, &[%PowerAssert.PositionAndValue{position: unquote(pos), value: v} | &1])
+
+      Agent.update(
+        buffer,
+        &[%PowerAssert.PositionAndValue{position: unquote(pos), value: v} | &1]
+      )
+
       v
     end
   end
