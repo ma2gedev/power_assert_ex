@@ -1,11 +1,11 @@
 defmodule PowerAssert.Renderer do
-  @moduledoc """
-  This module renders test result
-  """
+  @moduledoc false
 
   alias PowerAssert.PositionAndValue
 
-  @doc false
+  @doc """
+  renders test result
+  """
   def render_values(code_ast, position_and_values, lhs_result \\ nil, rhs_result \\ nil)
 
   def render_values(code_ast, [], lhs_result, rhs_result) do
