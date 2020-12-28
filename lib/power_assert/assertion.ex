@@ -1,3 +1,7 @@
+defmodule PowerAssert.PositionAndValue do
+  defstruct [:position, :value]
+end
+
 defmodule PowerAssert.Assertion do
   @moduledoc """
   This module handles Power Assert main function
@@ -38,7 +42,7 @@ defmodule PowerAssert.Assertion do
           if right do
             right
           else
-            message = PowerAssert.Renderer.render_values(expr, values)
+            message = PowerAssert.Renderer.render_values(expr, position_and_values)
             unquote(message_ast)
 
             raise ExUnit.AssertionError,
@@ -59,7 +63,7 @@ defmodule PowerAssert.Assertion do
             unquote(vars)
 
           _ ->
-            message = PowerAssert.Renderer.render_values(expr, values)
+            message = PowerAssert.Renderer.render_values(expr, position_and_values)
             unquote(message_ast)
 
             raise ExUnit.AssertionError,
@@ -82,12 +86,12 @@ defmodule PowerAssert.Assertion do
     quote do
       unquote(injected_lhs_ast)
       left = result
-      left_values = values
+      left_position_and_values = position_and_values
       unquote(injected_rhs_ast)
       # wrap result for avoid warning: this check/guard will always yield the same result
       unless left == (fn x -> x end).(result) do
         message =
-          PowerAssert.Renderer.render_values(unquote(code), left_values ++ values, left, result)
+          PowerAssert.Renderer.render_values(unquote(code), left_position_and_values ++ position_and_values, left, result)
 
         unquote(message_ast)
 
@@ -109,7 +113,7 @@ defmodule PowerAssert.Assertion do
       unquote(injected_ast)
 
       unless result do
-        message = PowerAssert.Renderer.render_values(unquote(code), values)
+        message = PowerAssert.Renderer.render_values(unquote(code), position_and_values)
         unquote(message_ast)
 
         raise ExUnit.AssertionError,
@@ -155,7 +159,7 @@ defmodule PowerAssert.Assertion do
     quote do
       {:ok, buffer} = Agent.start_link(fn -> [] end)
       result = unquote(injected_ast)
-      values = Agent.get(buffer, & &1)
+      position_and_values = Agent.get(buffer, & &1)
       Agent.stop(buffer)
     end
   end
@@ -484,7 +488,7 @@ defmodule PowerAssert.Assertion do
   defp store_value_ast(ast, pos) do
     quote do
       v = unquote(ast)
-      Agent.update(buffer, &[[unquote(pos), v] | &1])
+      Agent.update(buffer, &[%PowerAssert.PositionAndValue{position: unquote(pos), value: v} | &1])
       v
     end
   end

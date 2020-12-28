@@ -3,19 +3,21 @@ defmodule PowerAssert.Renderer do
   This module renders test result
   """
 
+  alias PowerAssert.PositionAndValue
+
   @doc false
-  def render_values(code_ast, values, lhs_result \\ nil, rhs_result \\ nil)
+  def render_values(code_ast, position_and_values, lhs_result \\ nil, rhs_result \\ nil)
 
   def render_values(code_ast, [], lhs_result, rhs_result) do
     Macro.to_string(code_ast) <> extra_information(lhs_result, rhs_result)
   end
 
-  def render_values(code_ast, values, lhs_result, rhs_result) do
+  def render_values(code_ast, position_and_values, lhs_result, rhs_result) do
     code_str = Macro.to_string(code_ast)
-    values = Enum.sort(values, fn [x_pos, _], [y_pos, _] -> x_pos > y_pos end)
-    [max_pos, _] = Enum.max_by(values, fn [pos, _] -> pos end)
-    first_line = String.duplicate(" ", max_pos + 1) |> replace_with_bar(values)
-    lines = make_lines([], Enum.count(values), values, -1)
+    position_and_values = Enum.sort(position_and_values, fn %PositionAndValue{position: x_pos}, %PositionAndValue{position: y_pos} -> x_pos > y_pos end)
+    %PositionAndValue{position: max_pos} = Enum.max_by(position_and_values, fn %PositionAndValue{position: pos} -> pos end)
+    first_line = String.duplicate(" ", max_pos + 1) |> replace_with_bar(position_and_values)
+    lines = make_lines([], Enum.count(position_and_values), position_and_values, -1)
     Enum.join([code_str, first_line] ++ lines, "\n") <> extra_information(lhs_result, rhs_result)
   end
 
@@ -23,8 +25,8 @@ defmodule PowerAssert.Renderer do
     lines
   end
 
-  defp make_lines(lines, times, values, latest_pos) do
-    [[pos, value] | t] = values
+  defp make_lines(lines, times, position_and_values, latest_pos) do
+    [%PositionAndValue{position: pos, value: value} | t] = position_and_values
     value = inspect(value)
     value_len = String.length(value)
 
@@ -37,7 +39,7 @@ defmodule PowerAssert.Renderer do
         Enum.reverse([line | tail_lines])
       else
         line = String.duplicate(" ", pos + 1)
-        line = replace_with_bar(line, values)
+        line = replace_with_bar(line, position_and_values)
         line = String.replace(line, ~r/\|$/, value)
         lines ++ [line]
       end
@@ -45,8 +47,8 @@ defmodule PowerAssert.Renderer do
     make_lines(lines, times - 1, t, pos)
   end
 
-  defp replace_with_bar(line, values) do
-    Enum.reduce(values, line, fn [pos, _value], line ->
+  defp replace_with_bar(line, position_and_values) do
+    Enum.reduce(position_and_values, line, fn %PositionAndValue{position: pos}, line ->
       {front, back} = String.split_at(line, pos + 1)
       String.replace(front, ~r/ $/, "|") <> back
     end)
