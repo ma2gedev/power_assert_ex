@@ -26,7 +26,7 @@ defmodule PowerAssert.Assertion do
     [_ | t] = String.split(Macro.to_string(ast), " = ")
     rhs_expr = Enum.join(t, " = ")
     rhs_index = (Macro.to_string(left) |> String.length()) + @assign_len
-    injected_rhs_ast = inject_store_code(right, rhs_expr, rhs_index)
+    injected_rhs_ast = __inject_store_code__(right, rhs_expr, rhs_index)
     message_ast = message_ast(msg)
 
     left = Macro.expand(left, __CALLER__)
@@ -74,9 +74,9 @@ defmodule PowerAssert.Assertion do
     code = Macro.escape(ast)
     [lhs_expr | t] = String.split(Macro.to_string(ast), " == ")
     rhs_expr = Enum.join(t, " == ")
-    injected_lhs_ast = inject_store_code(left, lhs_expr)
+    injected_lhs_ast = __inject_store_code__(left, lhs_expr)
     rhs_index = (Macro.to_string(left) |> String.length()) + @equal_len
-    injected_rhs_ast = inject_store_code(right, rhs_expr, rhs_index)
+    injected_rhs_ast = __inject_store_code__(right, rhs_expr, rhs_index)
     message_ast = message_ast(msg)
 
     quote do
@@ -101,7 +101,7 @@ defmodule PowerAssert.Assertion do
 
   defmacro assert(ast, msg) do
     code = Macro.escape(ast)
-    injected_ast = inject_store_code(ast, Macro.to_string(ast))
+    injected_ast = __inject_store_code__(ast, Macro.to_string(ast))
 
     message_ast = message_ast(msg)
 
@@ -139,7 +139,7 @@ defmodule PowerAssert.Assertion do
   end
 
   @doc false
-  def inject_store_code(ast, expr, default_index \\ 0) do
+  def __inject_store_code__(ast, expr, default_index \\ 0) do
     positions = detect_position(ast, expr, default_index)
 
     {injected_ast, _} =
