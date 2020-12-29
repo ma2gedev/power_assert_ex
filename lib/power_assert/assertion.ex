@@ -1,3 +1,7 @@
+defmodule PowerAssert.PositionAndValue do
+  defstruct [:position, :value]
+end
+
 defmodule PowerAssert.Assertion do
   @moduledoc """
   This module handles Power Assert main function
@@ -38,7 +42,7 @@ defmodule PowerAssert.Assertion do
           if right do
             right
           else
-            message = PowerAssert.Assertion.render_values(expr, values)
+            message = PowerAssert.Renderer.render(expr, position_and_values)
             unquote(message_ast)
 
             raise ExUnit.AssertionError,
@@ -59,7 +63,7 @@ defmodule PowerAssert.Assertion do
             unquote(vars)
 
           _ ->
-            message = PowerAssert.Assertion.render_values(expr, values)
+            message = PowerAssert.Renderer.render(expr, position_and_values)
             unquote(message_ast)
 
             raise ExUnit.AssertionError,
@@ -82,12 +86,17 @@ defmodule PowerAssert.Assertion do
     quote do
       unquote(injected_lhs_ast)
       left = result
-      left_values = values
+      left_position_and_values = position_and_values
       unquote(injected_rhs_ast)
       # wrap result for avoid warning: this check/guard will always yield the same result
       unless left == (fn x -> x end).(result) do
         message =
-          PowerAssert.Assertion.render_values(unquote(code), left_values ++ values, left, result)
+          PowerAssert.Renderer.render(
+            unquote(code),
+            left_position_and_values ++ position_and_values,
+            left,
+            result
+          )
 
         unquote(message_ast)
 
@@ -109,7 +118,7 @@ defmodule PowerAssert.Assertion do
       unquote(injected_ast)
 
       unless result do
-        message = PowerAssert.Assertion.render_values(unquote(code), values)
+        message = PowerAssert.Renderer.render(unquote(code), position_and_values)
         unquote(message_ast)
 
         raise ExUnit.AssertionError,
@@ -155,7 +164,7 @@ defmodule PowerAssert.Assertion do
     quote do
       {:ok, buffer} = Agent.start_link(fn -> [] end)
       result = unquote(injected_ast)
-      values = Agent.get(buffer, & &1)
+      position_and_values = Agent.get(buffer, & &1)
       Agent.stop(buffer)
     end
   end
@@ -484,7 +493,12 @@ defmodule PowerAssert.Assertion do
   defp store_value_ast(ast, pos) do
     quote do
       v = unquote(ast)
-      Agent.update(buffer, &[[unquote(pos), v] | &1])
+
+      Agent.update(
+        buffer,
+        &[%PowerAssert.PositionAndValue{position: unquote(pos), value: v} | &1]
+      )
+
       v
     end
   end
@@ -605,122 +619,6 @@ defmodule PowerAssert.Assertion do
   end
 
   defp catcher(ast, injector), do: {ast, injector}
-
-  ## render
-  def render_values(code, values, left \\ nil, right \\ nil)
-
-  def render_values(code, [], left, right) do
-    Macro.to_string(code) <> extra_information(left, right)
-  end
-
-  def render_values(code, values, left, right) do
-    code_str = Macro.to_string(code)
-    values = Enum.sort(values, fn [x_pos, _], [y_pos, _] -> x_pos > y_pos end)
-    [max_pos, _] = Enum.max_by(values, fn [pos, _] -> pos end)
-    first_line = String.duplicate(" ", max_pos + 1) |> replace_with_bar(values)
-    lines = make_lines([], Enum.count(values), values, -1)
-    Enum.join([code_str, first_line] ++ lines, "\n") <> extra_information(left, right)
-  end
-
-  defp make_lines(lines, 0, _, _latest_pos) do
-    lines
-  end
-
-  defp make_lines(lines, times, values, latest_pos) do
-    [[pos, value] | t] = values
-    value = inspect(value)
-    value_len = String.length(value)
-
-    lines =
-      if latest_pos != -1 && latest_pos - (pos + value_len) > 0 do
-        [last_line | tail_lines] = Enum.reverse(lines)
-        {before_str, after_str} = String.split_at(last_line, pos)
-        {_removed_str, after_str} = String.split_at(after_str, value_len)
-        line = before_str <> value <> after_str
-        Enum.reverse([line | tail_lines])
-      else
-        line = String.duplicate(" ", pos + 1)
-        line = replace_with_bar(line, values)
-        line = String.replace(line, ~r/\|$/, value)
-        lines ++ [line]
-      end
-
-    make_lines(lines, times - 1, t, pos)
-  end
-
-  defp replace_with_bar(line, values) do
-    Enum.reduce(values, line, fn [pos, _value], line ->
-      {front, back} = String.split_at(line, pos + 1)
-      String.replace(front, ~r/ $/, "|") <> back
-    end)
-  end
-
-  defp extra_information(left, right) when is_list(left) and is_list(right) do
-    [
-      "\n\nonly in lhs: " <> ((left -- right) |> inspect),
-      "only in rhs: " <> ((right -- left) |> inspect)
-    ]
-    |> Enum.join("\n")
-  end
-
-  defp extra_information(left, right) when is_map(left) and is_map(right) do
-    left = Map.delete(left, :__struct__)
-    right = Map.delete(right, :__struct__)
-    in_left = Map.split(left, Map.keys(right)) |> elem(1)
-    in_right = Map.split(right, Map.keys(left)) |> elem(1)
-    str = "\n"
-
-    str =
-      if map_size(in_left) != 0 do
-        str <> "\nonly in lhs: " <> inspect(in_left)
-      else
-        str
-      end
-
-    str =
-      if map_size(in_right) != 0 do
-        str <> "\nonly in rhs: " <> inspect(in_right)
-      else
-        str
-      end
-
-    diff = collect_map_diff(left, right)
-
-    str =
-      case Enum.empty?(diff) do
-        true -> str
-        false -> str <> "\ndifference:\n" <> Enum.join(diff, "\n")
-      end
-
-    str
-  end
-
-  defp extra_information(left, right) do
-    if String.valid?(left) && String.valid?(right) do
-      extra_information_for_string(left, right)
-    else
-      ""
-    end
-  end
-
-  defp extra_information_for_string(left, right) do
-    "\n\ndifference:" <> "\n" <> left <> "\n" <> right
-  end
-
-  defp collect_map_diff(map1, map2) do
-    Enum.reduce(map2, [], fn {k, v}, acc ->
-      case Map.fetch(map1, k) do
-        {:ok, ^v} ->
-          acc
-
-        {:ok, map1_value} ->
-          acc ++ ["key #{inspect(k)} => {#{inspect(map1_value)}, #{inspect(v)}}"]
-
-        _ ->
-          acc
-      end
-    end)
-  end
 
   defp collect_vars_from_pattern(expr) do
     {_, vars} =
