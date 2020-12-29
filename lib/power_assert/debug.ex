@@ -1,6 +1,4 @@
 defmodule PowerAssert.Debug do
-  import PowerAssert.Assertion
-
   @moduledoc """
   This module provides debug utilities
   """
@@ -18,7 +16,7 @@ defmodule PowerAssert.Debug do
   """
   defmacro puts_expr(ast) do
     code = Macro.escape(ast)
-    injected_ast = inject_store_code(ast, Macro.to_string(ast))
+    injected_ast = PowerAssert.Assertion.__inject_store_code__(ast, Macro.to_string(ast))
 
     quote do
       unquote(injected_ast)
