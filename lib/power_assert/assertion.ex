@@ -174,14 +174,7 @@ defmodule PowerAssert.Assertion do
     {_ast, %Detector{positions: positions}} =
       Macro.traverse(ast, %Detector{code: expr}, &pre_collect_position/2, &collect_position/2)
 
-    positions =
-      if default_index != 0 do
-        Enum.map(positions, fn [pos, code] -> [default_index + pos, code] end)
-      else
-        positions
-      end
-
-    positions
+    Enum.map(positions, fn [pos, _code] -> default_index + pos end)
   end
 
   @ignored_atoms [:fn, :&, :=, :"::", :@]
@@ -530,7 +523,7 @@ defmodule PowerAssert.Assertion do
 
   defp catcher(
          {{:., _, [Access, :get]}, _, [_l, _r]} = ast,
-         %Injector{positions: [[pos, _] | t]} = injector
+         %Injector{positions: [pos | t]} = injector
        ) do
     {store_value_ast(ast, pos), %{injector | positions: t}}
   end
@@ -541,7 +534,7 @@ defmodule PowerAssert.Assertion do
 
   defp catcher(
          {{:., _, [_l, r_atom]}, _meta, _} = ast,
-         %Injector{positions: [[pos, _] | t]} = injector
+         %Injector{positions: [pos | t]} = injector
        )
        when is_atom(r_atom) do
     {store_value_ast(ast, pos), %{injector | positions: t}}
@@ -550,7 +543,7 @@ defmodule PowerAssert.Assertion do
   defp catcher({{:., _, [_l]}, _, _} = ast, %Injector{in_fn: in_fn} = injector) when in_fn > 0,
     do: {ast, injector}
 
-  defp catcher({{:., _, [_l]}, _, _} = ast, %Injector{positions: [[pos, _] | t]} = injector) do
+  defp catcher({{:., _, [_l]}, _, _} = ast, %Injector{positions: [pos | t]} = injector) do
     {store_value_ast(ast, pos), %{injector | positions: t}}
   end
 
@@ -558,35 +551,32 @@ defmodule PowerAssert.Assertion do
        when op in @arithmetic_ops and in_fn > 0,
        do: {ast, injector}
 
-  defp catcher({op, _, [_l, _r]} = ast, %Injector{positions: [[pos, _] | t]} = injector)
+  defp catcher({op, _, [_l, _r]} = ast, %Injector{positions: [pos | t]} = injector)
        when op in @arithmetic_ops do
     {store_value_ast(ast, pos), %{injector | positions: t}}
   end
 
-  defp catcher({atom, _, _args} = ast, %Injector{positions: [h | t]} = injector)
+  defp catcher({atom, _, _args} = ast, %Injector{positions: [pos | t]} = injector)
        when atom in @ignored_atoms do
     if atom == :@ and injector.in_fn == 1 do
-      [pos, _] = h
       {store_value_ast(ast, pos), %{injector | positions: t, in_fn: injector.in_fn - 1}}
     else
       {ast, %{injector | in_fn: injector.in_fn - 1}}
     end
   end
 
-  defp catcher({func, _, _args} = ast, %Injector{positions: [h | t]} = injector)
+  defp catcher({func, _, _args} = ast, %Injector{positions: [pos | t]} = injector)
        when func in @unsupported_func do
     if injector.in_fn == 1 do
-      [pos, _] = h
       {store_value_ast(ast, pos), %{injector | positions: t, in_fn: injector.in_fn - 1}}
     else
       {ast, %{injector | in_fn: injector.in_fn - 1}}
     end
   end
 
-  defp catcher({func, _, [_, _]} = ast, %Injector{positions: [h | t]} = injector)
+  defp catcher({func, _, [_, _]} = ast, %Injector{positions: [pos | t]} = injector)
        when func in @unsupported_func_arity2 do
     if injector.in_fn == 1 do
-      [pos, _] = h
       {store_value_ast(ast, pos), %{injector | positions: t, in_fn: injector.in_fn - 1}}
     else
       {ast, %{injector | in_fn: injector.in_fn - 1}}
@@ -604,7 +594,7 @@ defmodule PowerAssert.Assertion do
     end
   end
 
-  defp catcher({func, _, args} = ast, %Injector{positions: [[pos, _] | t]} = injector)
+  defp catcher({func, _, args} = ast, %Injector{positions: [pos | t]} = injector)
        when not (func in @ignore_ops) and is_atom(func) and is_list(args) do
     {store_value_ast(ast, pos), %{injector | positions: t}}
   end
@@ -613,7 +603,7 @@ defmodule PowerAssert.Assertion do
        when is_atom(variable) and is_atom(el) and in_fn > 0,
        do: {ast, injector}
 
-  defp catcher({variable, _, el} = ast, %Injector{positions: [[pos, _] | t]} = injector)
+  defp catcher({variable, _, el} = ast, %Injector{positions: [pos | t]} = injector)
        when is_atom(variable) and is_atom(el) do
     {store_value_ast(ast, pos), %{injector | positions: t}}
   end
