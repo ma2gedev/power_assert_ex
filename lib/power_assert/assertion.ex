@@ -7,8 +7,11 @@ defmodule PowerAssert.Assertion do
   This module handles Power Assert main function
   """
 
+  @assign_string " = "
   # length of " = "
   @assign_len 3
+
+  @equal_string " == "
   # length of " == "
   @equal_len 4
 
@@ -27,8 +30,8 @@ defmodule PowerAssert.Assertion do
   defmacro assert({:=, _, [left, right]} = ast, msg) do
     # Almost the same code as ExUnit but rhs is displayed in detail
     code = Macro.escape(ast)
-    [lhs_expr | t] = String.split(Macro.to_string(ast), " = ")
-    rhs_expr = Enum.join(t, " = ")
+    [lhs_expr | t] = String.split(Macro.to_string(ast), @assign_string)
+    rhs_expr = Enum.join(t, @assign_string)
     rhs_index = String.length(lhs_expr) + @assign_len
     injected_rhs_ast = __inject_store_code__(right, rhs_expr, rhs_index)
     message_ast = message_ast(msg)
@@ -76,8 +79,8 @@ defmodule PowerAssert.Assertion do
 
   defmacro assert({:==, _, [left, right]} = ast, msg) do
     code = Macro.escape(ast)
-    [lhs_expr | t] = String.split(Macro.to_string(ast), " == ")
-    rhs_expr = Enum.join(t, " == ")
+    [lhs_expr | t] = String.split(Macro.to_string(ast), @equal_string)
+    rhs_expr = Enum.join(t, @equal_string)
     injected_lhs_ast = __inject_store_code__(left, lhs_expr)
     rhs_index = String.length(lhs_expr) + @equal_len
     injected_rhs_ast = __inject_store_code__(right, rhs_expr, rhs_index)
