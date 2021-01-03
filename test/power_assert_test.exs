@@ -37,6 +37,16 @@ defmodule PowerAssertTest do
         end
     end
   end
+
+  defmacrop assert_ok(arg) do
+    quote do
+      assert {:ok, val} = {:ok, unquote(arg)}
+    end
+  end
+
+  test "assert inside macro" do
+    assert_ok 42
+  end
 end
 
 defmodule PowerAssertAssertionTest do

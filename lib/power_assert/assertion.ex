@@ -625,8 +625,8 @@ defmodule PowerAssert.Assertion do
         {:_, _, context}, acc when is_atom(context) ->
           {:ok, acc}
 
-        {name, _, context}, acc when is_atom(name) and is_atom(context) ->
-          {:ok, [{name, [generated: true], context} | acc]}
+        {name, meta, context}, acc when is_atom(name) and is_atom(context) ->
+          {:ok, [{name, [generated: true] ++ meta, context} | acc]}
 
         node, acc ->
           {node, acc}
