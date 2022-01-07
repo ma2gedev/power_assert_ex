@@ -805,12 +805,20 @@ defmodule PowerAssertAssertionTest do
       Assertion.assert -x == +y
     end)
 
-    expect = """
-    not(x)
-    |   |
-    |   true
-    false
-    """
+    expect = expectation_by_version("1.13.0", %{
+      earlier: """
+               not(x)
+               |   |
+               |   true
+               false
+               """,
+      later:   """
+               not x
+               |   |
+               |   true
+               false
+               """
+    })
     assert_helper(expect, fn () ->
       x = true
       Assertion.assert not x
