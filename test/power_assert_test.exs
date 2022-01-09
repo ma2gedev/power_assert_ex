@@ -1057,11 +1057,18 @@ defmodule PowerAssertAssertionTest do
       Assertion.assert update_in(users["john"][:age], &(&1 + 1)) == %{"john" => %{age: 27}}
     end)
 
-    expect = """
-    get_and_update_in(users["john"].age(), &({&1, &1 + 1})) == {27, %{"john" => %{age: 27}}}
-    |
-    {27, %{"john" => %{age: 28}}}
-    """
+    expect = expectation_by_version("1.13.0", %{
+      earlier: """
+               get_and_update_in(users["john"].age(), &({&1, &1 + 1})) == {27, %{"john" => %{age: 27}}}
+               |
+               {27, %{"john" => %{age: 28}}}
+               """,
+      later:   """
+               get_and_update_in(users["john"].age(), &{&1, &1 + 1}) == {27, %{"john" => %{age: 27}}}
+               |
+               {27, %{"john" => %{age: 28}}}
+               """
+    })
     assert_helper(expect, fn () ->
       users = %{"john" => %{age: 27}}
       Assertion.assert get_and_update_in(users["john"].age(), &{&1, &1 + 1}) == {27, %{"john" => %{age: 27}}}
