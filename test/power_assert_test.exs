@@ -1176,16 +1176,36 @@ defmodule PowerAssertAssertionTest do
   end
 
   test "big map" do
-    expect = """
-    big_map == %{:hoge => "value", "value" => "hoge", ["fuga"] => [], %{hoge: :hoge} => %{}, :big => "big", :middle => "middle", :small => "small"}
-    |
-    %{:big => "big", :hoge => "value", :moga => "moga", :small => "small", %{hoge: :hoge} => %{}, ["fuga"] => [], "value" => "hoe"}
+    expect = expectation_by_version("1.13.0", %{
+      earlier: """
+               big_map == %{:hoge => "value", "value" => "hoge", ["fuga"] => [], %{hoge: :hoge} => %{}, :big => "big", :middle => "middle", :small => "small"}
+               |
+               %{:big => "big", :hoge => "value", :moga => "moga", :small => "small", %{hoge: :hoge} => %{}, ["fuga"] => [], "value" => "hoe"}
 
-    only in lhs: %{moga: "moga"}
-    only in rhs: %{middle: "middle"}
-    difference:
-    key "value" => {"hoe", "hoge"}
-    """
+               only in lhs: %{moga: "moga"}
+               only in rhs: %{middle: "middle"}
+               difference:
+               key "value" => {"hoe", "hoge"}
+               """,
+      later:   """
+               big_map == %{
+                 :hoge => "value",
+                 "value" => "hoge",
+                 ["fuga"] => [],
+                 %{hoge: :hoge} => %{},
+                 big: "big",
+                 middle: "middle",
+                 small: "small"
+               }
+               |
+               %{:big => "big", :hoge => "value", :moga => "moga", :small => "small", %{hoge: :hoge} => %{}, ["fuga"] => [], "value" => "hoe"}
+
+               only in lhs: %{moga: "moga"}
+               only in rhs: %{middle: "middle"}
+               difference:
+               key "value" => {"hoe", "hoge"}
+               """
+    })
     assert_helper(expect, fn () ->
       big_map = %{:hoge => "value", "value" => "hoe", ["fuga"] => [], %{hoge: :hoge} => %{}, :big => "big", :small => "small", moga: "moga"}
       Assertion.assert big_map == %{:hoge => "value", "value" => "hoge", ["fuga"] => [], %{hoge: :hoge} => %{}, :big => "big", :middle => "middle", :small => "small"}
