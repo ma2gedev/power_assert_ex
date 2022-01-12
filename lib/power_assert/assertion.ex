@@ -223,7 +223,7 @@ defmodule PowerAssert.Assertion do
     :{}
   ]
   defp pre_collect_position({func, _, args} = ast, detector)
-       when not (func in @ignore_ops) and is_atom(func) and is_list(args) do
+       when func not in @ignore_ops and is_atom(func) and is_list(args) do
     case Atom.to_string(func) do
       <<"sigil_", _name>> ->
         {ast, %{detector | in_fn: detector.in_fn + 1}}
@@ -370,7 +370,7 @@ defmodule PowerAssert.Assertion do
   # [1, 2] |> first()
   #           ^
   defp collect_position({func, _, args} = ast, %Detector{in_fn: in_fn} = detector)
-       when not (func in @ignore_ops) and is_atom(func) and is_list(args) and in_fn > 0 do
+       when func not in @ignore_ops and is_atom(func) and is_list(args) and in_fn > 0 do
     case Atom.to_string(func) do
       # not supported sigils
       <<"sigil_", _name>> ->
@@ -382,7 +382,7 @@ defmodule PowerAssert.Assertion do
   end
 
   defp collect_position({func, _, args} = ast, detector)
-       when not (func in @ignore_ops) and is_atom(func) and is_list(args) do
+       when func not in @ignore_ops and is_atom(func) and is_list(args) do
     func_code = Macro.to_string(ast)
     matches = Regex.scan(~r/(?<!\.)#{Regex.escape(func_code)}/, detector.code, return: :index)
     positions = insert_pos_unless_exist(detector.positions, matches, func_code)
@@ -472,7 +472,7 @@ defmodule PowerAssert.Assertion do
   end
 
   defp pre_catcher({func, _, args} = ast, injector)
-       when not (func in @ignore_ops) and is_atom(func) and is_list(args) do
+       when func not in @ignore_ops and is_atom(func) and is_list(args) do
     case Atom.to_string(func) do
       <<"sigil_", _name>> ->
         {ast, %{injector | in_fn: injector.in_fn + 1}}
@@ -587,7 +587,7 @@ defmodule PowerAssert.Assertion do
   end
 
   defp catcher({func, _, args} = ast, %Injector{positions: [_h | _t], in_fn: in_fn} = injector)
-       when not (func in @ignore_ops) and is_atom(func) and is_list(args) and in_fn > 0 do
+       when func not in @ignore_ops and is_atom(func) and is_list(args) and in_fn > 0 do
     case Atom.to_string(func) do
       <<"sigil_", _name>> ->
         {ast, %{injector | in_fn: injector.in_fn - 1}}
@@ -598,7 +598,7 @@ defmodule PowerAssert.Assertion do
   end
 
   defp catcher({func, _, args} = ast, %Injector{positions: [pos | t]} = injector)
-       when not (func in @ignore_ops) and is_atom(func) and is_list(args) do
+       when func not in @ignore_ops and is_atom(func) and is_list(args) do
     {store_value_ast(ast, pos), %{injector | positions: t}}
   end
 

@@ -805,12 +805,20 @@ defmodule PowerAssertAssertionTest do
       Assertion.assert -x == +y
     end)
 
-    expect = """
-    not(x)
-    |   |
-    |   true
-    false
-    """
+    expect = expectation_by_version("1.13.0", %{
+      earlier: """
+               not(x)
+               |   |
+               |   true
+               false
+               """,
+      later:   """
+               not x
+               |   |
+               |   true
+               false
+               """
+    })
     assert_helper(expect, fn () ->
       x = true
       Assertion.assert not x
@@ -980,13 +988,22 @@ defmodule PowerAssertAssertionTest do
 
   @opts [context: Elixir]
   test "quote expr not supported" do
-    expect = """
-    quote(@opts) do
-      :hoge
-    end == :fuga
-    |
-    :hoge
-    """
+    expect = expectation_by_version("1.13.0", %{
+      earlier: """
+               quote(@opts) do
+                 :hoge
+               end == :fuga
+               |
+               :hoge
+               """,
+      later:   """
+               quote @opts do
+                 :hoge
+               end == :fuga
+               |
+               :hoge
+               """
+    })
     assert_helper(expect, fn () ->
       Assertion.assert quote(@opts, do: :hoge) == :fuga
     end)
@@ -1040,11 +1057,18 @@ defmodule PowerAssertAssertionTest do
       Assertion.assert update_in(users["john"][:age], &(&1 + 1)) == %{"john" => %{age: 27}}
     end)
 
-    expect = """
-    get_and_update_in(users["john"].age(), &({&1, &1 + 1})) == {27, %{"john" => %{age: 27}}}
-    |
-    {27, %{"john" => %{age: 28}}}
-    """
+    expect = expectation_by_version("1.13.0", %{
+      earlier: """
+               get_and_update_in(users["john"].age(), &({&1, &1 + 1})) == {27, %{"john" => %{age: 27}}}
+               |
+               {27, %{"john" => %{age: 28}}}
+               """,
+      later:   """
+               get_and_update_in(users["john"].age(), &{&1, &1 + 1}) == {27, %{"john" => %{age: 27}}}
+               |
+               {27, %{"john" => %{age: 28}}}
+               """
+    })
     assert_helper(expect, fn () ->
       users = %{"john" => %{age: 27}}
       Assertion.assert get_and_update_in(users["john"].age(), &{&1, &1 + 1}) == {27, %{"john" => %{age: 27}}}
@@ -1052,16 +1076,28 @@ defmodule PowerAssertAssertionTest do
   end
 
   test "for expr not supported" do
-    expect = """
-    for(x <- enum) do
-      x * 2
-    end == [2, 4, 6]
-    |
-    [2, 4, 8]
-    
-    only in lhs: '\\b'
-    only in rhs: [6]
-    """
+    expect = expectation_by_version("1.13.0", %{
+      earlier: """
+               for(x <- enum) do
+                 x * 2
+               end == [2, 4, 6]
+               |
+               [2, 4, 8]
+               
+               only in lhs: '\\b'
+               only in rhs: [6]
+               """,
+      later:   """
+               for x <- enum do
+                 x * 2
+               end == [2, 4, 6]
+               |
+               [2, 4, 8]
+               
+               only in lhs: '\\b'
+               only in rhs: [6]
+               """
+    })
     assert_helper(expect, fn () ->
       enum = [1,2,4]
       Assertion.assert for(x <- enum, do: x * 2) == [2, 4, 6]
@@ -1085,19 +1121,34 @@ defmodule PowerAssertAssertionTest do
   end
 
   test "case expr not supported" do
-    expect = """
-    case(x) do
-      {:ok, right} ->
-        right
-      {_left, right} ->
-        case(right) do
-          {:ok, right} ->
-            right
-        end
-    end == :doing
-    |
-    :done
-    """
+    expect = expectation_by_version("1.13.0", %{
+      earlier: """
+               case(x) do
+                 {:ok, right} ->
+                   right
+                 {_left, right} ->
+                   case(right) do
+                     {:ok, right} ->
+                       right
+                   end
+               end == :doing
+               |
+               :done
+               """,
+      later:   """
+               case x do
+                 {:ok, right} ->
+                   right
+
+                 {_left, right} ->
+                   case right do
+                     {:ok, right} -> right
+                   end
+               end == :doing
+               |
+               :done
+               """
+    })
     assert_helper(expect, fn () ->
       x = {:error, {:ok, :done}}
       Assertion.assert (case x do
@@ -1125,16 +1176,36 @@ defmodule PowerAssertAssertionTest do
   end
 
   test "big map" do
-    expect = """
-    big_map == %{:hoge => "value", "value" => "hoge", ["fuga"] => [], %{hoge: :hoge} => %{}, :big => "big", :middle => "middle", :small => "small"}
-    |
-    %{:big => "big", :hoge => "value", :moga => "moga", :small => "small", %{hoge: :hoge} => %{}, ["fuga"] => [], "value" => "hoe"}
+    expect = expectation_by_version("1.13.0", %{
+      earlier: """
+               big_map == %{:hoge => "value", "value" => "hoge", ["fuga"] => [], %{hoge: :hoge} => %{}, :big => "big", :middle => "middle", :small => "small"}
+               |
+               %{:big => "big", :hoge => "value", :moga => "moga", :small => "small", %{hoge: :hoge} => %{}, ["fuga"] => [], "value" => "hoe"}
 
-    only in lhs: %{moga: "moga"}
-    only in rhs: %{middle: "middle"}
-    difference:
-    key "value" => {"hoe", "hoge"}
-    """
+               only in lhs: %{moga: "moga"}
+               only in rhs: %{middle: "middle"}
+               difference:
+               key "value" => {"hoe", "hoge"}
+               """,
+      later:   """
+               big_map == %{
+                 :hoge => "value",
+                 "value" => "hoge",
+                 ["fuga"] => [],
+                 %{hoge: :hoge} => %{},
+                 big: "big",
+                 middle: "middle",
+                 small: "small"
+               }
+               |
+               %{:big => "big", :hoge => "value", :moga => "moga", :small => "small", %{hoge: :hoge} => %{}, ["fuga"] => [], "value" => "hoe"}
+
+               only in lhs: %{moga: "moga"}
+               only in rhs: %{middle: "middle"}
+               difference:
+               key "value" => {"hoe", "hoge"}
+               """
+    })
     assert_helper(expect, fn () ->
       big_map = %{:hoge => "value", "value" => "hoe", ["fuga"] => [], %{hoge: :hoge} => %{}, :big => "big", :small => "small", moga: "moga"}
       Assertion.assert big_map == %{:hoge => "value", "value" => "hoge", ["fuga"] => [], %{hoge: :hoge} => %{}, :big => "big", :middle => "middle", :small => "small"}
