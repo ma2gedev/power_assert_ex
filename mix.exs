@@ -9,7 +9,7 @@ defmodule PowerAssert.MixProject do
       description: "Power Assert in Elixir. Shows evaluation results each expression.",
       package: [
         maintainers: ["Takayuki Matsubara"],
-        licenses: ["Apache 2.0"],
+        licenses: ["Apache-2.0"],
         links: %{"GitHub" => "https://github.com/ma2gedev/power_assert_ex"}
       ],
       build_embedded: Mix.env() == :prod,
