@@ -1008,22 +1008,13 @@ defmodule PowerAssertAssertionTest do
       Assertion.assert quote(@opts, do: :hoge) == :fuga
     end)
 
-    expect = expectation_by_version("1.8.0", %{
-      earlier: """
-               quote() do
-                 unquote(x)
-               end == :fuga
-               |
-               :hoge
-               """,
-      later:   """
-               quote do
-                 unquote(x)
-               end == :fuga
-               |
-               :hoge
-               """
-    })
+    expect = """
+    quote do
+      unquote(x)
+    end == :fuga
+    |
+    :hoge
+    """
     assert_helper(expect, fn () ->
       x = :hoge
       Assertion.assert quote(do: unquote(x)) == :fuga
