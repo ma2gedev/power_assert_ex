@@ -47,12 +47,12 @@ jobs:
 
   format:
     name: Format
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         include:
-          - elixir: 1.13.1
-            otp: 23.3
+          - elixir: 1.14
+            otp: 25.1
     steps:
     - uses: actions/checkout@v2
     - name: Set up Elixir
